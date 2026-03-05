@@ -1,0 +1,4 @@
+interface_version: 1
+display_name: Spec Init Bootstrap
+short_description: 手动触发的一次性 Spec 初始化技能，默认 dry-run，支持 Windows/macOS
+default_prompt: 执行 $spec-init-bootstrap，对当前仓库先 dry-run，再按确认执行 apply 初始化 Spec 目录结构。
