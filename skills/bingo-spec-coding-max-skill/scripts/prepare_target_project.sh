@@ -45,4 +45,4 @@ for source_file in "$SOURCE_DOC_DIR"/*; do
 done
 
 echo "[OK] Target project prepared: $TARGET_PROJECT_DIR"
-echo "[INFO] Next step: trigger \$bingo-spec-coding-max-skills inside the target project."
+echo "[INFO] Next step: trigger \$bingo-spec-coding-max-skill inside the target project."

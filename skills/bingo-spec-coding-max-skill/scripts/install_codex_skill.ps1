@@ -16,7 +16,7 @@ if ([string]::IsNullOrWhiteSpace($CodexHome)) {
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $skillSourceDir = Split-Path -Parent $scriptDir
 $targetRoot = Join-Path $CodexHome "skills"
-$targetDir = Join-Path $targetRoot "bingo-spec-coding-max-skills"
+$targetDir = Join-Path $targetRoot "bingo-spec-coding-max-skill"
 
 New-Item -ItemType Directory -Force -Path $targetRoot | Out-Null
 
@@ -39,4 +39,4 @@ else {
 
 Write-Output "[OK] Skill $action to: $targetDir"
 Write-Output "[INFO] Using CODEX_HOME: $CodexHome"
-Write-Output "[INFO] Trigger from a target project with: `$bingo-spec-coding-max-skills"
+Write-Output "[INFO] Trigger from a target project with: `$bingo-spec-coding-max-skill"

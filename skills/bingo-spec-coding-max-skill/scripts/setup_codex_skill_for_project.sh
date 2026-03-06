@@ -51,4 +51,4 @@ bash "$SCRIPT_DIR/install_codex_skill.sh" "${INSTALL_ARGS[@]}"
 bash "$SCRIPT_DIR/prepare_target_project.sh" "${PREPARE_ARGS[@]}"
 
 echo "[OK] Codex skill installed and target project prepared."
-echo "[INFO] Open the target project in Codex and trigger: \$bingo-spec-coding-max-skills"
+echo "[INFO] Open the target project in Codex and trigger: \$bingo-spec-coding-max-skill"

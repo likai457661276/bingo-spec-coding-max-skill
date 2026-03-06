@@ -40,7 +40,7 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_SOURCE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 TARGET_ROOT="$CODEX_HOME_VALUE/skills"
-TARGET_DIR="$TARGET_ROOT/bingo-spec-coding-max-skills"
+TARGET_DIR="$TARGET_ROOT/bingo-spec-coding-max-skill"
 
 mkdir -p "$TARGET_ROOT"
 
@@ -63,4 +63,4 @@ fi
 
 echo "[OK] Skill $ACTION to: $TARGET_DIR"
 echo "[INFO] Using CODEX_HOME: $CODEX_HOME_VALUE"
-echo "[INFO] Trigger from a target project with: \$bingo-spec-coding-max-skills"
+echo "[INFO] Trigger from a target project with: \$bingo-spec-coding-max-skill"

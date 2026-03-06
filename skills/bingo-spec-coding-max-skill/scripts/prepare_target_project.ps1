@@ -25,4 +25,4 @@ foreach ($sourceFile in $sourceFiles) {
 }
 
 Write-Output "[OK] Target project prepared: $targetProjectDir"
-Write-Output "[INFO] Next step: trigger `$bingo-spec-coding-max-skills inside the target project."
+Write-Output "[INFO] Next step: trigger `$bingo-spec-coding-max-skill inside the target project."

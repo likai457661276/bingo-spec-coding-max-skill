@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SCRIPT_PATH = REPO_ROOT / "skills/bingo-spec-coding-max-skills/scripts/init_spec_repo.py"
+SCRIPT_PATH = REPO_ROOT / "skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.py"
 
 
 class InitSpecRepoTests(unittest.TestCase):

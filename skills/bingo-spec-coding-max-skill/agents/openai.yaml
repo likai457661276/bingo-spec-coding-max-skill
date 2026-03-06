@@ -1,0 +1,4 @@
+interface_version: 1
+display_name: bingo-spec-coding-max-skill
+short_description: 手动触发的一次性 Spec 初始化技能，默认 dry-run，支持 Windows/macOS
+default_prompt: 执行 $bingo-spec-coding-max-skill，对当前仓库按 v6 初始化规范先 dry-run，预览 AGENTS.md、spec/INDEX.md、L1/L2/L3 模板与 prompts，再按确认执行 apply。

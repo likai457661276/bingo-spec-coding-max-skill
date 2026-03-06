@@ -1,12 +1,12 @@
-# bingo-spec-coding-max-skills
+# bingo-spec-coding-max-skill
 
 把任意代码仓库初始化为 Spec-Driven Development 结构的 bootstrap kit。
 
 它包含四部分能力：
 
 - `doc/`: 初始化规范、分类提示词、任务生成提示词、示例
-- `skills/bingo-spec-coding-max-skills/`: 手动触发的 Skill 定义
-- `skills/bingo-spec-coding-max-skills/scripts/`: 跨平台初始化脚本
+- `skills/bingo-spec-coding-max-skill/`: 手动触发的 Skill 定义
+- `skills/bingo-spec-coding-max-skill/scripts/`: 跨平台初始化脚本
 - 生成产物：项目级 `AGENTS.md` 与 `spec/` 目录骨架
 
 这个项目的目标不是只提供一段 prompt，而是提供一套可落地的初始化入口，让后续 AI 开发流程能够围绕统一的 `Context -> Plan -> Spec -> Tasks -> Code` 结构运行。
@@ -34,7 +34,7 @@
 ## 当前仓库结构
 
 - `doc/`: 初始化输入文档
-- `skills/bingo-spec-coding-max-skills/`: Skill 定义与跨平台初始化脚本
+- `skills/bingo-spec-coding-max-skill/`: Skill 定义与跨平台初始化脚本
 
 ## 变更分级
 
@@ -136,7 +136,7 @@
 
 ## Skill 触发规则
 
-仅在用户显式提到 `$bingo-spec-coding-max-skills` 时执行。
+仅在用户显式提到 `$bingo-spec-coding-max-skill` 时执行。
 
 默认执行方式：
 
@@ -146,13 +146,13 @@
 
 ## 作为 Codex 技能接入现有项目
 
-这里的目标不是把当前仓库当作业务项目打开，而是把 `bingo-spec-coding-max-skills` 安装为 Codex 的本地技能，然后在任意现有项目中显式触发它。
+这里的目标不是把当前仓库当作业务项目打开，而是把 `bingo-spec-coding-max-skill` 安装为 Codex 的本地技能，然后在任意现有项目中显式触发它。
 
 ### 接入模型
 
 推荐使用两层结构：
 
-- 技能仓库：保存 `skills/bingo-spec-coding-max-skills/` 的定义、脚本和维护版本
+- 技能仓库：保存 `skills/bingo-spec-coding-max-skill/` 的定义、脚本和维护版本
 - 目标项目：提供待初始化的代码仓库、`doc/` 输入文件，以及最终生成的 `AGENTS.md` 和 `spec/`
 
 这样做的好处是：
@@ -165,19 +165,19 @@
 
 建议优先使用仓库自带的一步式脚本，它会同时完成：
 
-- 安装 `bingo-spec-coding-max-skills` 到 `$CODEX_HOME/skills/`
+- 安装 `bingo-spec-coding-max-skill` 到 `$CODEX_HOME/skills/`
 - 将 `doc/` 输入模板复制到目标项目
 
 macOS / Linux:
 
 ```bash
-bash ./skills/bingo-spec-coding-max-skills/scripts/setup_codex_skill_for_project.sh --target-project /path/to/your-project
+bash ./skills/bingo-spec-coding-max-skill/scripts/setup_codex_skill_for_project.sh --target-project /path/to/your-project
 ```
 
 Windows:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skills\scripts\setup_codex_skill_for_project.ps1 -TargetProject C:\path\to\your-project
+powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\scripts\setup_codex_skill_for_project.ps1 -TargetProject C:\path\to\your-project
 ```
 
 如果你只想单独安装 skill，再使用下方安装脚本。
@@ -185,13 +185,13 @@ powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skills\s
 macOS / Linux:
 
 ```bash
-bash ./skills/bingo-spec-coding-max-skills/scripts/install_codex_skill.sh
+bash ./skills/bingo-spec-coding-max-skill/scripts/install_codex_skill.sh
 ```
 
 Windows:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skills\scripts\install_codex_skill.ps1
+powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\scripts\install_codex_skill.ps1
 ```
 
 默认安装模式：
@@ -211,17 +211,17 @@ macOS / Linux:
 
 ```bash
 mkdir -p "$CODEX_HOME/skills"
-ln -s "/path/to/bingo-spec-coding-max-skills/skills/bingo-spec-coding-max-skills" "$CODEX_HOME/skills/bingo-spec-coding-max-skills"
+ln -s "/path/to/bingo-spec-coding-max-skill/skills/bingo-spec-coding-max-skill" "$CODEX_HOME/skills/bingo-spec-coding-max-skill"
 ```
 
 如果你不想使用软链接，也可以直接复制：
 
 ```bash
 mkdir -p "$CODEX_HOME/skills"
-cp -R "/path/to/bingo-spec-coding-max-skills/skills/bingo-spec-coding-max-skills" "$CODEX_HOME/skills/bingo-spec-coding-max-skills"
+cp -R "/path/to/bingo-spec-coding-max-skill/skills/bingo-spec-coding-max-skill" "$CODEX_HOME/skills/bingo-spec-coding-max-skill"
 ```
 
-安装完成后，Codex 会把它视为一个本地技能，名称为 `$bingo-spec-coding-max-skills`。
+安装完成后，Codex 会把它视为一个本地技能，名称为 `$bingo-spec-coding-max-skill`。
 
 ### 目标项目需要准备什么
 
@@ -248,13 +248,13 @@ doc/
 macOS / Linux:
 
 ```bash
-bash ./skills/bingo-spec-coding-max-skills/scripts/prepare_target_project.sh --target-project /path/to/your-project
+bash ./skills/bingo-spec-coding-max-skill/scripts/prepare_target_project.sh --target-project /path/to/your-project
 ```
 
 Windows:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skills\scripts\prepare_target_project.ps1 -TargetProject C:\path\to\your-project
+powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\scripts\prepare_target_project.ps1 -TargetProject C:\path\to\your-project
 ```
 
 如果目标项目里已经存在 `doc/` 文件并且你确认要覆盖：
@@ -272,12 +272,12 @@ powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skills\s
 4. 显式输入：
 
 ```text
-请执行 $bingo-spec-coding-max-skills，对当前项目先 dry-run，确认后再 apply。
+请执行 $bingo-spec-coding-max-skill，对当前项目先 dry-run，确认后再 apply。
 ```
 
 Codex 应该按以下方式工作：
 
-- 读取 `$CODEX_HOME/skills/bingo-spec-coding-max-skills/SKILL.md`
+- 读取 `$CODEX_HOME/skills/bingo-spec-coding-max-skill/SKILL.md`
 - 使用当前项目的 `doc/` 作为输入
 - 在当前项目内生成 `AGENTS.md`、`spec/` 和 `.spec-bootstrap.lock`
 
@@ -288,15 +288,15 @@ Codex 应该按以下方式工作：
 macOS / Linux:
 
 ```bash
-bash "$CODEX_HOME/skills/bingo-spec-coding-max-skills/scripts/init_spec_repo.sh" --project-root . --dry-run
-bash "$CODEX_HOME/skills/bingo-spec-coding-max-skills/scripts/init_spec_repo.sh" --project-root . --apply
+bash "$CODEX_HOME/skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh" --project-root . --dry-run
+bash "$CODEX_HOME/skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh" --project-root . --apply
 ```
 
 Windows:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File $env:CODEX_HOME\skills\bingo-spec-coding-max-skills\scripts\init_spec_repo.ps1 --project-root . --dry-run
-powershell -ExecutionPolicy Bypass -File $env:CODEX_HOME\skills\bingo-spec-coding-max-skills\scripts\init_spec_repo.ps1 --project-root . --apply
+powershell -ExecutionPolicy Bypass -File $env:CODEX_HOME\skills\bingo-spec-coding-max-skill\scripts\init_spec_repo.ps1 --project-root . --dry-run
+powershell -ExecutionPolicy Bypass -File $env:CODEX_HOME\skills\bingo-spec-coding-max-skill\scripts\init_spec_repo.ps1 --project-root . --apply
 ```
 
 ### 接入约束
@@ -316,17 +316,17 @@ macOS / Linux:
 ```bash
 export CODEX_HOME="$HOME/.codex"
 
-bash ./skills/bingo-spec-coding-max-skills/scripts/setup_codex_skill_for_project.sh --target-project /path/to/existing-project
+bash ./skills/bingo-spec-coding-max-skill/scripts/setup_codex_skill_for_project.sh --target-project /path/to/existing-project
 
 cd /path/to/existing-project
 
-bash "$CODEX_HOME/skills/bingo-spec-coding-max-skills/scripts/init_spec_repo.sh" --project-root . --dry-run
+bash "$CODEX_HOME/skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh" --project-root . --dry-run
 ```
 
 进入 Codex 后可直接输入：
 
 ```text
-请执行 $bingo-spec-coding-max-skills，对当前项目先 dry-run，确认后再 apply。
+请执行 $bingo-spec-coding-max-skill，对当前项目先 dry-run，确认后再 apply。
 ```
 
 Windows:
@@ -334,17 +334,17 @@ Windows:
 ```powershell
 $env:CODEX_HOME = "$HOME\.codex"
 
-powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skills\scripts\setup_codex_skill_for_project.ps1 -TargetProject C:\path\to\existing-project
+powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\scripts\setup_codex_skill_for_project.ps1 -TargetProject C:\path\to\existing-project
 
 Set-Location C:\path\to\existing-project
 
-powershell -ExecutionPolicy Bypass -File $env:CODEX_HOME\skills\bingo-spec-coding-max-skills\scripts\init_spec_repo.ps1 --project-root . --dry-run
+powershell -ExecutionPolicy Bypass -File $env:CODEX_HOME\skills\bingo-spec-coding-max-skill\scripts\init_spec_repo.ps1 --project-root . --dry-run
 ```
 
 预期结果：
 
 - 目标项目生成 `doc/` 输入模板
-- Codex 可识别 `$bingo-spec-coding-max-skills`
+- Codex 可识别 `$bingo-spec-coding-max-skill`
 - dry-run 会预览 `AGENTS.md`、`spec/`、模板与 prompts
 - 确认后可继续执行 `apply`
 
@@ -353,15 +353,15 @@ powershell -ExecutionPolicy Bypass -File $env:CODEX_HOME\skills\bingo-spec-codin
 ### Windows (PowerShell)
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skills\scripts\init_spec_repo.ps1 --dry-run
-powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skills\scripts\init_spec_repo.ps1 --apply
+powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\scripts\init_spec_repo.ps1 --dry-run
+powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\scripts\init_spec_repo.ps1 --apply
 ```
 
 ### macOS (bash)
 
 ```bash
-bash ./skills/bingo-spec-coding-max-skills/scripts/init_spec_repo.sh --dry-run
-bash ./skills/bingo-spec-coding-max-skills/scripts/init_spec_repo.sh --apply
+bash ./skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh --dry-run
+bash ./skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh --apply
 ```
 
 ## 可选参数
@@ -429,7 +429,7 @@ bash ./skills/bingo-spec-coding-max-skills/scripts/init_spec_repo.sh --apply
 ### 手动触发
 
 ```text
-请执行 $bingo-spec-coding-max-skills，对当前仓库按 v6 规范做初始化。先 dry-run，确认模板和 prompts 预览后再 apply。
+请执行 $bingo-spec-coding-max-skill，对当前仓库做初始化。先 dry-run，确认后再 apply。
 ```
 
 ### 分级示例

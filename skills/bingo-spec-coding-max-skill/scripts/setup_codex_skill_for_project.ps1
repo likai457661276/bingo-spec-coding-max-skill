@@ -35,4 +35,4 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Output "[OK] Codex skill installed and target project prepared."
-Write-Output "[INFO] Open the target project in Codex and trigger: `$bingo-spec-coding-max-skills"
+Write-Output "[INFO] Open the target project in Codex and trigger: `$bingo-spec-coding-max-skill"
