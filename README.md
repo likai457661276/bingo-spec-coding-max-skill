@@ -1,172 +1,190 @@
 # bingo-spec-coding-max-skill
 
-把任意代码仓库初始化为 Spec-Driven Development 结构的 bootstrap kit。
+#### English | [简体中文](./README_CN.md)
 
-它包含四部分能力：
+![Spec Driven](https://img.shields.io/badge/Spec-Driven-blue)
+![Workflow](https://img.shields.io/badge/Workflow-Context%20%E2%86%92%20Plan%20%E2%86%92%20Spec%20%E2%86%92%20Tasks%20%E2%86%92%20Code-0A7)
+![Platforms](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-444)
 
-- `doc/`: 初始化规范、分类提示词、任务生成提示词、示例
-- `skills/bingo-spec-coding-max-skill/`: 手动触发的 Skill 定义
-- `skills/bingo-spec-coding-max-skill/scripts/`: 跨平台初始化脚本
-- 生成产物：项目级 `AGENTS.md` 与 `spec/` 目录骨架
+Bootstrap kit that turns any repository into a Spec-Driven Development workspace.
 
-这个项目的目标不是只提供一段 prompt，而是提供一套可落地的初始化入口，让后续 AI 开发流程能够围绕统一的 `Context -> Plan -> Spec -> Tasks -> Code` 结构运行。
+> A practical bootstrap entry for teams that want consistent AI collaboration, explicit quality gates, and repeatable delivery flow.
 
-## 产品定位
+## Quick Start
 
-本仓库定位为：
+```powershell
+powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\scripts\init_spec_repo.ps1 --dry-run
+powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\scripts\init_spec_repo.ps1 --apply
+```
 
-一个用于初始化 Spec 驱动协作规范的 bootstrap kit。
+## Docs
 
-初始化完成后，目标仓库应具备：
+- [Install as a Codex Skill](#install-as-a-codex-skill-for-existing-projects)
+- [Change Classification](#change-classification)
+- [Human Gates](#human-gates)
+- [Usage](#usage)
+- [Examples](#examples)
 
-- 一个项目级 `AGENTS.md`
-- 一个统一入口 `spec/INDEX.md`
-- 一组可复用的模板与 prompts
-- 一套明确的变更分级和人类门禁规则
+It provides four core parts:
 
-## 适用场景
+- `doc/`: bootstrap specs, classifier prompts, task-generation prompts, and examples
+- `skills/bingo-spec-coding-max-skill/`: manually triggered Skill definition
+- `skills/bingo-spec-coding-max-skill/scripts/`: cross-platform bootstrap scripts
+- generated outputs: project-level `AGENTS.md` and the `spec/` skeleton
 
-- 新仓库希望从一开始就采用 Spec 驱动协作
-- 现有仓库希望补齐 AI 可读的规范骨架
-- 团队希望统一 Codex / GPT / Claude 的工作入口
-- 需要把高风险改动与低风险改动区分处理
+The goal is not to ship just another prompt. This repository provides a practical initialization entry point so later AI-assisted development can run around a consistent `Context -> Plan -> Spec -> Tasks -> Code` structure.
 
-## 当前仓库结构
+## Positioning
 
-- `doc/`: 初始化输入文档
-- `skills/bingo-spec-coding-max-skill/`: Skill 定义与跨平台初始化脚本
+This repository is a bootstrap kit for initializing Spec-driven collaboration rules.
 
-## 变更分级
+After initialization, the target repository should have:
 
-本项目使用两层表达：
+- a project-level `AGENTS.md`
+- a single entrypoint at `spec/INDEX.md`
+- reusable templates and prompts
+- explicit change classification and human-gate rules
 
-- 流程分级：`L1 | L2 | L3`
-- 质量门禁类型：`FEATURE | SMALL_CHANGE | BUG_FIX`
+## Use Cases
 
-默认映射关系：
+- new repositories that want to adopt Spec-driven collaboration from day one
+- existing repositories that need an AI-readable spec skeleton
+- teams that want a unified operating entry for Codex / GPT / Claude
+- workflows that need to separate high-risk changes from low-risk changes
+
+## Current Repository Layout
+
+- `doc/`: bootstrap input documents
+- `skills/bingo-spec-coding-max-skill/`: Skill definition and cross-platform bootstrap scripts
+
+## Change Classification
+
+This project uses two related expressions:
+
+- process levels: `L1 | L2 | L3`
+- quality gate types: `FEATURE | SMALL_CHANGE | BUG_FIX`
+
+Default mapping:
 
 - `L1 -> FEATURE`
-- `L2 -> SMALL_CHANGE`，若是纯缺陷修复也可归入 `BUG_FIX`
+- `L2 -> SMALL_CHANGE`, or `BUG_FIX` if it is strictly a defect fix
 - `L3 -> BUG_FIX`
 
 ### L1 Feature Change
 
-适用范围：
+Scope:
 
-- 新功能
-- 新 API
-- 新模块
-- 数据库 schema 变更
-- 重要业务逻辑变更
+- new features
+- new APIs
+- new modules
+- database schema changes
+- important business logic changes
 
-默认流程：
+Default flow:
 
 `Context -> Plan -> Spec -> Tasks -> Code`
 
 ### L2 Small Change
 
-适用范围：
+Scope:
 
-- 普通 bug fix
-- 校验规则修正
-- 日志改进
-- 范围有限的行为调整
+- regular bug fixes
+- validation rule corrections
+- logging improvements
+- limited-scope behavior adjustments
 
-默认流程：
+Default flow:
 
 `Tasks -> Code`
 
 ### L3 Hotfix
 
-适用范围：
+Scope:
 
-- 生产故障
-- 安全问题
-- 紧急关键缺陷
+- production incidents
+- security issues
+- urgent critical defects
 
-默认流程：
+Default flow:
 
 `Patch Proposal -> Code`
 
-## 人类门禁
+## Human Gates
 
-本项目明确要求：AI 不能只靠分级自动一路执行到代码提交，不同等级必须在不同阶段暂停，等待人类确认。
+This project explicitly requires human confirmation at defined checkpoints. AI must not classify a change and continue all the way to code commit without stopping at the required stage.
 
-### L1 的人类介入时机
+### Human Checkpoints for L1
 
-必须介入 3 次：
+Three checkpoints are mandatory:
 
-- `Plan` 完成后确认：确认方向、边界、影响范围
-- `Spec` 完成后确认：确认需求、约束、验收标准
-- `Tasks` 完成后确认：确认实施顺序、拆分粒度、测试范围
+- confirm after `Plan`: direction, boundaries, and impact
+- confirm after `Spec`: requirements, constraints, and acceptance criteria
+- confirm after `Tasks`: implementation order, task granularity, and test scope
 
-允许进入编码的前提：
+Coding may start only when:
 
-- `Plan` 已确认
-- `Spec` 已确认
-- `Tasks` 已确认
+- `Plan` is confirmed
+- `Spec` is confirmed
+- `Tasks` is confirmed
 
-不应跳过上述任一门禁直接编码。
+Do not skip any of these gates.
 
-### L2 的人类介入时机
+### Human Checkpoints for L2
 
-必须介入 1 次：
+One checkpoint is mandatory:
 
-- `Tasks` 完成后确认：确认变更范围足够小、不会引入架构漂移、验证方式足够明确
+- confirm after `Tasks`: verify the change is still small, does not introduce architecture drift, and has a clear validation approach
 
-允许进入编码的前提：
+Coding may start only when:
 
-- 已读取相关 feature spec
-- `Tasks` 已确认
+- the related feature spec has been read
+- `Tasks` is confirmed
 
-如果变更在分析后发现已超出“小改动”边界，应升级为 `L1`。
+If analysis shows the change is no longer small, escalate it to `L1`.
 
-### L3 的人类介入时机
+### Human Checkpoints for L3
 
-必须介入 1 次：
+One checkpoint is mandatory:
 
-- `Patch Proposal` 完成后确认：确认补丁足够小、风险可接受、回滚方式明确
+- confirm after `Patch Proposal`: verify the patch is minimal, risk is acceptable, and rollback is clear
 
-允许进入编码的前提：
+Coding may start only when:
 
-- 已定位问题范围
-- 最小补丁方案已确认
+- the failure scope is located
+- the minimal patch is confirmed
 
-如果补丁不再是“最小安全修复”，应降速并升级为 `L2` 或 `L1`。
+If the patch is no longer the smallest safe fix, slow down and escalate to `L2` or `L1`.
 
-## Skill 触发规则
+## Skill Trigger Rule
 
-仅在用户显式提到 `$bingo-spec-coding-max-skill` 时执行。
+Run this skill only when the user explicitly mentions `$bingo-spec-coding-max-skill`.
 
-默认执行方式：
+Default execution flow:
 
-1. 先 `dry-run`
-2. 展示将创建或覆盖的文件，包括 `v6` prompt、L1/L2/L3 模板与 `spec/features/` 骨架
-3. 获得确认后再 `apply`
+1. run `dry-run`
+2. show which files will be created or overwritten, including the `v6` prompt, L1/L2/L3 templates, and the `spec/features/` skeleton
+3. run `apply` only after confirmation
 
-## 作为 Codex 技能接入现有项目
+## Install as a Codex Skill for Existing Projects
 
-这里的目标不是把当前仓库当作业务项目打开，而是把 `bingo-spec-coding-max-skill` 安装为 Codex 的本地技能，然后在任意现有项目中显式触发它。
+The goal here is not to open this repository as a business project. Instead, install `bingo-spec-coding-max-skill` as a local Codex skill and trigger it explicitly inside any existing repository.
 
-### 接入模型
+### Integration Model
 
-推荐使用两层结构：
+Recommended two-layer structure:
 
-- 技能仓库：保存 `skills/bingo-spec-coding-max-skill/` 的定义、脚本和维护版本
-- 目标项目：提供待初始化的代码仓库、`doc/` 输入文件，以及最终生成的 `AGENTS.md` 和 `spec/`
+- skill repository: stores `skills/bingo-spec-coding-max-skill/`, scripts, and versioned maintenance
+- target project: stores the repository to initialize, the `doc/` inputs, and the generated `AGENTS.md` and `spec/`
 
-这样做的好处是：
+Benefits:
 
-- 技能可以集中维护和升级
-- 初始化结果会写入目标项目，而不是写回技能仓库
-- 同一个技能可以复用到多个项目
+- the skill can be maintained and upgraded centrally
+- initialization writes into the target project, not back into the skill repository
+- the same skill can be reused across multiple projects
 
-### 安装到 Codex
+### Install into Codex
 
-建议优先使用仓库自带的一步式脚本，它会同时完成：
-
-- 安装 `bingo-spec-coding-max-skill` 到 `$CODEX_HOME/skills/`
-- 将 `doc/` 输入模板复制到目标项目
+Prefer the one-step setup script shipped with this repository. It installs `bingo-spec-coding-max-skill` into `$CODEX_HOME/skills/` and copies the `doc/` input templates into the target project.
 
 macOS / Linux:
 
@@ -180,7 +198,7 @@ Windows:
 powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\scripts\setup_codex_skill_for_project.ps1 -TargetProject C:\path\to\your-project
 ```
 
-如果你只想单独安装 skill，再使用下方安装脚本。
+If you only want to install the skill, use the installer below.
 
 macOS / Linux:
 
@@ -194,18 +212,18 @@ Windows:
 powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\scripts\install_codex_skill.ps1
 ```
 
-默认安装模式：
+Default install mode:
 
-- macOS / Linux 默认使用 `symlink`
-- Windows 默认使用 `copy`
-- 默认 `CODEX_HOME` 为 `~/.codex`，如果环境变量未设置也可直接运行
+- macOS / Linux defaults to `symlink`
+- Windows defaults to `copy`
+- default `CODEX_HOME` is `~/.codex` if the environment variable is not set
 
-可选安装参数：
+Optional install flags:
 
 - macOS / Linux: `--mode symlink|copy --force`
 - Windows: `-Mode symlink|copy -Force`
 
-如果你希望手动安装，也可以直接把 skill 放到 `$CODEX_HOME/skills/`。
+If you want a manual install, place the skill directly under `$CODEX_HOME/skills/`.
 
 macOS / Linux:
 
@@ -214,18 +232,18 @@ mkdir -p "$CODEX_HOME/skills"
 ln -s "/path/to/bingo-spec-coding-max-skill/skills/bingo-spec-coding-max-skill" "$CODEX_HOME/skills/bingo-spec-coding-max-skill"
 ```
 
-如果你不想使用软链接，也可以直接复制：
+If you do not want a symlink, copy it instead:
 
 ```bash
 mkdir -p "$CODEX_HOME/skills"
 cp -R "/path/to/bingo-spec-coding-max-skill/skills/bingo-spec-coding-max-skill" "$CODEX_HOME/skills/bingo-spec-coding-max-skill"
 ```
 
-安装完成后，Codex 会把它视为一个本地技能，名称为 `$bingo-spec-coding-max-skill`。
+After installation, Codex recognizes it as a local skill named `$bingo-spec-coding-max-skill`.
 
-### 目标项目需要准备什么
+### What the Target Project Must Provide
 
-在现有项目中，至少准备一个 `doc/` 目录，并放入以下输入文件：
+Inside the existing project, prepare at least a `doc/` directory with these input files:
 
 ```text
 doc/
@@ -236,14 +254,14 @@ doc/
   usage_examples.md
 ```
 
-推荐做法有两种：
+Recommended approaches:
 
-1. 从本仓库复制 `doc/` 到目标项目
-2. 由你的团队在目标项目内维护自己的 `doc/` 版本，再复用当前 skill
+1. copy `doc/` from this repository into the target project
+2. maintain your own `doc/` version in the target project and reuse the current skill
 
-如果目标项目没有这些文件，初始化脚本会报缺失错误并停止。
+If the target project does not contain these files, the bootstrap script fails with a missing-input error.
 
-如果你只想单独准备目标项目，也可以使用准备脚本：
+If you only want to prepare the target project, use the preparation script:
 
 macOS / Linux:
 
@@ -257,33 +275,33 @@ Windows:
 powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\scripts\prepare_target_project.ps1 -TargetProject C:\path\to\your-project
 ```
 
-如果目标项目里已经存在 `doc/` 文件并且你确认要覆盖：
+If `doc/` already exists and you want to overwrite it:
 
-- macOS / Linux: 追加 `--force`
-- Windows: 追加 `-Force`
+- macOS / Linux: add `--force`
+- Windows: add `-Force`
 
-这个脚本只负责把初始化输入模板写入目标项目，不会执行 spec 初始化。
+This script only writes the bootstrap input templates to the target project. It does not run spec initialization.
 
-### 在目标项目中如何触发
+### How to Trigger It in the Target Project
 
-1. 用 Codex 打开目标项目根目录
-2. 确认当前工作目录就是目标项目，而不是技能仓库
-3. 如果还没准备 `doc/`，先运行准备脚本
-4. 显式输入：
+1. open the target project root in Codex
+2. make sure the current working directory is the target project, not the skill repository
+3. if `doc/` is not prepared yet, run the preparation script first
+4. explicitly enter:
 
 ```text
-请执行 $bingo-spec-coding-max-skill，对当前项目先 dry-run，确认后再 apply。
+Please run $bingo-spec-coding-max-skill for the current project. Start with dry-run, then apply after confirmation.
 ```
 
-Codex 应该按以下方式工作：
+Codex should:
 
-- 读取 `$CODEX_HOME/skills/bingo-spec-coding-max-skill/SKILL.md`
-- 使用当前项目的 `doc/` 作为输入
-- 在当前项目内生成 `AGENTS.md`、`spec/` 和 `.spec-bootstrap.lock`
+- read `$CODEX_HOME/skills/bingo-spec-coding-max-skill/SKILL.md`
+- use the current project's `doc/` as input
+- generate `AGENTS.md`, `spec/`, and `.spec-bootstrap.lock` inside the current project
 
-### 推荐的执行命令
+### Recommended Execution Commands
 
-如果 Codex 需要在终端中显式执行脚本，建议使用技能目录下的脚本，但把 `project-root` 指向当前项目。
+If Codex needs to call scripts from the terminal, use the scripts under the skill directory and point `project-root` to the current project.
 
 macOS / Linux:
 
@@ -299,17 +317,17 @@ powershell -ExecutionPolicy Bypass -File $env:CODEX_HOME\skills\bingo-spec-codin
 powershell -ExecutionPolicy Bypass -File $env:CODEX_HOME\skills\bingo-spec-coding-max-skill\scripts\init_spec_repo.ps1 --project-root . --apply
 ```
 
-### 接入约束
+### Integration Constraints
 
-- 技能目录负责提供能力，不负责保存业务项目输出
-- 目标项目必须自行维护 `doc/` 输入内容
-- 首次使用必须先 `dry-run`
-- 只有在用户确认后才应执行 `apply`
-- 已有 `.spec-bootstrap.lock` 时，除非明确要求，否则不应重复初始化
+- the skill directory provides capability, but should not store business project outputs
+- the target project must maintain its own `doc/` inputs
+- the first run must start with `dry-run`
+- `apply` should run only after explicit user confirmation
+- if `.spec-bootstrap.lock` already exists, do not reinitialize unless explicitly requested
 
-### 端到端示例
+### End-to-End Example
 
-下面示例展示如何把当前技能接入一个已存在项目，并在 Codex 中开始使用。
+The example below shows how to install this skill into an existing project and start using it in Codex.
 
 macOS / Linux:
 
@@ -323,10 +341,10 @@ cd /path/to/existing-project
 bash "$CODEX_HOME/skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh" --project-root . --dry-run
 ```
 
-进入 Codex 后可直接输入：
+Inside Codex, you can then enter:
 
 ```text
-请执行 $bingo-spec-coding-max-skill，对当前项目先 dry-run，确认后再 apply。
+Please run $bingo-spec-coding-max-skill for the current project. Start with dry-run, then apply after confirmation.
 ```
 
 Windows:
@@ -341,14 +359,14 @@ Set-Location C:\path\to\existing-project
 powershell -ExecutionPolicy Bypass -File $env:CODEX_HOME\skills\bingo-spec-coding-max-skill\scripts\init_spec_repo.ps1 --project-root . --dry-run
 ```
 
-预期结果：
+Expected result:
 
-- 目标项目生成 `doc/` 输入模板
-- Codex 可识别 `$bingo-spec-coding-max-skill`
-- dry-run 会预览 `AGENTS.md`、`spec/`、模板与 prompts
-- 确认后可继续执行 `apply`
+- the target project gets the `doc/` input templates
+- Codex can recognize `$bingo-spec-coding-max-skill`
+- `dry-run` previews `AGENTS.md`, `spec/`, templates, and prompts
+- after confirmation, `apply` can continue
 
-## 运行方式
+## Usage
 
 ### Windows (PowerShell)
 
@@ -364,16 +382,16 @@ bash ./skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh --dry-run
 bash ./skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh --apply
 ```
 
-## 可选参数
+## Optional Flags
 
-- `--project-root <path>`: 目标项目根目录，默认当前目录
-- `--source-docs <path>`: 输入文档目录，默认 `<project-root>/doc`
-- `--force`: 覆盖已有文件
-- `--reinit`: 忽略 lock 重新初始化
+- `--project-root <path>`: target project root, default is current directory
+- `--source-docs <path>`: input document directory, default is `<project-root>/doc`
+- `--force`: overwrite existing files
+- `--reinit`: ignore lock file and reinitialize
 
-## 初始化输出
+## Initialization Output
 
-执行 `--apply` 后，当前脚本会创建或写入：
+Running `--apply` creates or writes:
 
 - `AGENTS.md`
 - `spec/INDEX.md`
@@ -389,7 +407,7 @@ bash ./skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh --apply
 - `spec/usage/usage_examples.md`
 - `.spec-bootstrap.lock`
 
-## 初始化后的目录示意
+## Resulting Directory Layout
 
 ```text
 .
@@ -417,28 +435,28 @@ bash ./skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh --apply
 └── .spec-bootstrap.lock
 ```
 
-其中：
+Where:
 
-- `spec/templates/PLAN_TEMPLATE.md` 用于 `L1`
-- `spec/templates/CHANGE_TEMPLATE.md` 用于 `L2`
-- `spec/templates/HOTFIX_TEMPLATE.md` 用于 `L3`
-- `spec/features/` 是后续 feature 规格和 change 历史的根目录
+- `spec/templates/PLAN_TEMPLATE.md` is used for `L1`
+- `spec/templates/CHANGE_TEMPLATE.md` is used for `L2`
+- `spec/templates/HOTFIX_TEMPLATE.md` is used for `L3`
+- `spec/features/` is the root directory for future feature specs and change history
 
-## 使用示例
+## Examples
 
-### 手动触发
+### Manual Trigger
 
 ```text
-请执行 $bingo-spec-coding-max-skill，对当前仓库做初始化。先 dry-run，确认后再 apply。
+Please run $bingo-spec-coding-max-skill to initialize the current repository. Start with dry-run, then apply after confirmation.
 ```
 
-### 分级示例
+### Classification Examples
 
-1. `L1`: 新增登录功能，先做 `Plan -> Spec -> Tasks`，每阶段等待确认，再进入编码。
-2. `L2`: 修复密码校验缺陷，先生成变更任务，确认后再编码。
-3. `L3`: 修复生产环境令牌故障，先提出最小补丁方案，确认后再编码。
+1. `L1`: add a login feature. Finish `Plan -> Spec -> Tasks`, wait for confirmation at each stage, then start coding.
+2. `L2`: fix password validation. Generate change tasks first, confirm them, then start coding.
+3. `L3`: fix a production token failure. Propose the minimal patch first, confirm it, then start coding.
 
-详细示例见：
+Detailed examples:
 
 - `doc/usage_examples.md`
-- `spec/usage/usage_examples.md`，初始化后生成
+- `spec/usage/usage_examples.md`, generated after initialization
