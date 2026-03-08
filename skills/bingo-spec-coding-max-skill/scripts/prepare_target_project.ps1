@@ -11,9 +11,13 @@ $targetDocDir = Join-Path $targetProjectDir "doc"
 
 New-Item -ItemType Directory -Force -Path $targetDocDir | Out-Null
 
-$sourceFiles = Get-ChildItem -File $sourceDocDir
+$sourceFiles = Get-ChildItem -Recurse -File $sourceDocDir
 foreach ($sourceFile in $sourceFiles) {
-    $targetFile = Join-Path $targetDocDir $sourceFile.Name
+    $relativePath = $sourceFile.FullName.Substring($sourceDocDir.Length).TrimStart('\', '/')
+    $targetFile = Join-Path $targetDocDir $relativePath
+    $targetParent = Split-Path -Parent $targetFile
+
+    New-Item -ItemType Directory -Force -Path $targetParent | Out-Null
 
     if ((Test-Path $targetFile) -and (-not $Force)) {
         Write-Error "Target file already exists: $targetFile . Re-run with -Force to overwrite existing doc inputs."

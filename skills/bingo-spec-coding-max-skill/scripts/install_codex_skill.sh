@@ -3,6 +3,7 @@ set -euo pipefail
 
 MODE="symlink"
 FORCE="false"
+UPGRADE="false"
 CODEX_HOME_VALUE="${CODEX_HOME:-}"
 DEFAULT_CODEX_HOME="$HOME/.codex"
 
@@ -20,9 +21,13 @@ while [[ $# -gt 0 ]]; do
       FORCE="true"
       shift
       ;;
+    --upgrade)
+      UPGRADE="true"
+      shift
+      ;;
     *)
       echo "[ERROR] Unknown argument: $1"
-      echo "Usage: $0 [--mode symlink|copy] [--codex-home <path>] [--force]"
+      echo "Usage: $0 [--mode symlink|copy] [--codex-home <path>] [--force] [--upgrade]"
       exit 1
       ;;
   esac
@@ -44,21 +49,37 @@ TARGET_DIR="$TARGET_ROOT/bingo-spec-coding-max-skill"
 
 mkdir -p "$TARGET_ROOT"
 
+REPLACE_EXISTING="$FORCE"
+if [[ "$UPGRADE" == "true" ]]; then
+  REPLACE_EXISTING="true"
+fi
+
 if [[ -e "$TARGET_DIR" || -L "$TARGET_DIR" ]]; then
-  if [[ "$FORCE" != "true" ]]; then
+  if [[ "$REPLACE_EXISTING" != "true" ]]; then
     echo "[ERROR] Target already exists: $TARGET_DIR"
-    echo "        Re-run with --force to replace it."
+    echo "        Re-run with --force or --upgrade to replace it."
     exit 1
   fi
   rm -rf "$TARGET_DIR"
+  EXISTING_TARGET="true"
+else
+  EXISTING_TARGET="false"
 fi
 
 if [[ "$MODE" == "symlink" ]]; then
   ln -s "$SKILL_SOURCE_DIR" "$TARGET_DIR"
-  ACTION="symlinked"
+  if [[ "$EXISTING_TARGET" == "true" ]]; then
+    ACTION="upgraded via symlink"
+  else
+    ACTION="symlinked"
+  fi
 else
   cp -R "$SKILL_SOURCE_DIR" "$TARGET_DIR"
-  ACTION="copied"
+  if [[ "$EXISTING_TARGET" == "true" ]]; then
+    ACTION="upgraded via copy"
+  else
+    ACTION="copied"
+  fi
 fi
 
 echo "[OK] Skill $ACTION to: $TARGET_DIR"

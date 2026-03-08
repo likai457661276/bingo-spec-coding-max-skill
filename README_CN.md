@@ -10,13 +10,6 @@
 
 > 一个可落地的初始化入口，用于统一 AI 协作流程、明确质量门禁，并让交付过程可重复。
 
-## 快速开始
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\scripts\init_spec_repo.ps1 --dry-run
-powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\scripts\init_spec_repo.ps1 --apply
-```
-
 ## 文档导航
 
 - [作为 Codex 技能接入现有项目](#作为-codex-技能接入现有项目)
@@ -31,6 +24,13 @@ powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\sc
 - `skills/bingo-spec-coding-max-skill/`: 手动触发的 Skill 定义
 - `skills/bingo-spec-coding-max-skill/scripts/`: 跨平台初始化脚本
 - 生成产物：项目级 `AGENTS.md` 与 `spec/` 目录骨架
+
+当前版本额外支持：
+
+- 自动生成增强版仓库级 `spec/SPEC_CONTEXT.md`
+- 自动识别 `Java`、`Frontend`、`Python` 与混合仓库信号
+- 自动补全运行命令、测试命令、源码目录、核心模块与工程约束初稿
+- 对低置信度信息保留“待确认”，避免把推断写成确定事实
 
 这个项目的目标不是只提供一段 prompt，而是提供一套可落地的初始化入口，让后续 AI 开发流程能够围绕统一的 `Context -> Plan -> Spec -> Tasks -> Code` 结构运行。
 
@@ -53,6 +53,8 @@ powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\sc
 - 现有仓库希望补齐 AI 可读的规范骨架
 - 团队希望统一 Codex / GPT / Claude 的工作入口
 - 需要把高风险改动与低风险改动区分处理
+- 希望为 Java / Frontend / Python 项目自动生成可用的 `SPEC_CONTEXT` 初稿
+- 希望在混合仓库中先得到多栈上下文草稿，再进入 Plan / Spec / Tasks
 
 ## 当前仓库结构
 
@@ -203,6 +205,14 @@ Windows:
 powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\scripts\setup_codex_skill_for_project.ps1 -TargetProject C:\path\to\your-project
 ```
 
+如果只想通过一步式脚本升级 Codex 中已安装的技能，而不覆盖目标项目 `doc/`，可以追加：
+
+- macOS / Linux: `--upgrade-skill`
+- Windows: `-UpgradeSkill`
+
+如果 skill 已经安装且未显式传 `-UpgradeSkill` 或 `-Force`，一步式脚本会跳过 skill 安装并继续准备目标项目。
+如果目标项目的 `doc/` 已经有输入文件且未显式传 `-Force`，一步式脚本也会跳过 `doc/` 准备并保留现有内容。
+
 如果你只想单独安装 skill，再使用下方安装脚本。
 
 macOS / Linux:
@@ -225,8 +235,22 @@ powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\sc
 
 可选安装参数：
 
-- macOS / Linux: `--mode symlink|copy --force`
-- Windows: `-Mode symlink|copy -Force`
+- macOS / Linux: `--mode symlink|copy --force --upgrade`
+- Windows: `-Mode symlink|copy -Force -Upgrade`
+
+如果你只想升级已安装到 Codex 的技能文件，而不覆盖目标项目里的 `doc/` 输入：
+
+macOS / Linux:
+
+```bash
+bash ./skills/bingo-spec-coding-max-skill/scripts/install_codex_skill.sh --upgrade
+```
+
+Windows:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\scripts\install_codex_skill.ps1 -Upgrade
+```
 
 如果你希望手动安装，也可以直接把 skill 放到 `$CODEX_HOME/skills/`。
 
@@ -248,16 +272,25 @@ cp -R "/path/to/bingo-spec-coding-max-skill/skills/bingo-spec-coding-max-skill" 
 
 ### 目标项目需要准备什么
 
-在现有项目中，至少准备一个 `doc/` 目录，并放入以下输入文件：
+在现有项目中，至少准备一个 `doc/` 目录。推荐结构如下：
 
 ```text
 doc/
-  spec_bootstrap_prompt_v6.md
-  change_classifier.prompt.md
-  generate_feature_tasks.prompt.md
-  generate_change_tasks.prompt.md
-  usage_examples.md
+  zh/
+    spec_bootstrap_prompt_v6.md
+    change_classifier.prompt.md
+    generate_feature_tasks.prompt.md
+    generate_change_tasks.prompt.md
+    usage_examples.md
+  en/
+    spec_bootstrap_prompt_v6.md
+    change_classifier.prompt.md
+    generate_feature_tasks.prompt.md
+    generate_change_tasks.prompt.md
+    usage_examples.md
 ```
+
+默认初始化语言为中文，即优先读取 `doc/zh/`；传入英文语言参数时读取 `doc/en/`。为了兼容旧版本，脚本仍可回退读取平铺的 `doc/*.md`。
 
 推荐做法有两种：
 
@@ -311,15 +344,31 @@ Codex 应该按以下方式工作：
 macOS / Linux:
 
 ```bash
-bash "$CODEX_HOME/skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh" --project-root . --dry-run
-bash "$CODEX_HOME/skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh" --project-root . --apply
+bash "$CODEX_HOME/skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh" --project-root . --dry-run --language zh
+bash "$CODEX_HOME/skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh" --project-root . --apply --language zh
 ```
 
 Windows:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File $env:CODEX_HOME\skills\bingo-spec-coding-max-skill\scripts\init_spec_repo.ps1 --project-root . --dry-run
-powershell -ExecutionPolicy Bypass -File $env:CODEX_HOME\skills\bingo-spec-coding-max-skill\scripts\init_spec_repo.ps1 --project-root . --apply
+powershell -ExecutionPolicy Bypass -File $env:CODEX_HOME\skills\bingo-spec-coding-max-skill\scripts\init_spec_repo.ps1 --project-root . --dry-run -Language zh
+powershell -ExecutionPolicy Bypass -File $env:CODEX_HOME\skills\bingo-spec-coding-max-skill\scripts\init_spec_repo.ps1 --project-root . --apply -Language zh
+```
+
+如果项目已经初始化过，想重新生成 spec 规范：
+
+macOS / Linux:
+
+```bash
+bash "$CODEX_HOME/skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh" --project-root . --dry-run --upgrade --language zh
+bash "$CODEX_HOME/skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh" --project-root . --apply --upgrade --language zh
+```
+
+Windows:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File $env:CODEX_HOME\skills\bingo-spec-coding-max-skill\scripts\init_spec_repo.ps1 --project-root . --dry-run -Upgrade -Language zh
+powershell -ExecutionPolicy Bypass -File $env:CODEX_HOME\skills\bingo-spec-coding-max-skill\scripts\init_spec_repo.ps1 --project-root . --apply -Upgrade -Language zh
 ```
 
 ### 接入约束
@@ -391,8 +440,10 @@ bash ./skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh --apply
 
 - `--project-root <path>`: 目标项目根目录，默认当前目录
 - `--source-docs <path>`: 输入文档目录，默认 `<project-root>/doc`
+- `--language <zh|en>`: 指定生成中文或英文 spec 结构，默认 `zh`
 - `--force`: 覆盖已有文件
 - `--reinit`: 忽略 lock 重新初始化
+- `--upgrade`: 用于已初始化项目的规范升级，等价于 `--reinit --force`
 
 ## 初始化输出
 
@@ -411,6 +462,24 @@ bash ./skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh --apply
 - `spec/prompts/*.md`
 - `spec/usage/usage_examples.md`
 - `.spec-bootstrap.lock`
+
+其中 `spec/SPEC_CONTEXT.md` 会基于当前仓库自动生成增强版初稿，固定包含以下章节：
+
+- 仓库摘要
+- 核心模块
+- 运行与数据约束
+- 测试与验证约束
+- UI 与接口约束
+- 工程约束
+- 领域约束
+- 非功能约束
+- 假设与未知项
+
+自动生成规则：
+
+- 高置信度信息直接写入初稿，例如构建工具、测试命令、常见源码目录、框架依赖
+- 低置信度信息使用“检测到”“推测”“建议关注”“待确认”等保守措辞
+- 弱特征仓库会优雅回退到最小上下文模板，不会强行编造架构结论
 
 ## 初始化后的目录示意
 

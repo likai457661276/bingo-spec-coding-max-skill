@@ -30,9 +30,12 @@ TARGET_DOC_DIR="$TARGET_PROJECT_DIR/doc"
 
 mkdir -p "$TARGET_DOC_DIR"
 
-for source_file in "$SOURCE_DOC_DIR"/*; do
-  file_name="$(basename "$source_file")"
-  target_file="$TARGET_DOC_DIR/$file_name"
+while IFS= read -r -d '' source_file; do
+  relative_path="${source_file#"$SOURCE_DOC_DIR"/}"
+  target_file="$TARGET_DOC_DIR/$relative_path"
+  target_parent="$(dirname "$target_file")"
+
+  mkdir -p "$target_parent"
 
   if [[ -e "$target_file" && "$FORCE" != "true" ]]; then
     echo "[ERROR] Target file already exists: $target_file"
@@ -42,7 +45,7 @@ for source_file in "$SOURCE_DOC_DIR"/*; do
 
   cp "$source_file" "$target_file"
   echo "[COPY ] $target_file"
-done
+done < <(find "$SOURCE_DOC_DIR" -type f -print0)
 
 echo "[OK] Target project prepared: $TARGET_PROJECT_DIR"
 echo "[INFO] Next step: trigger \$bingo-spec-coding-max-skill inside the target project."

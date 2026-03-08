@@ -10,13 +10,6 @@ Bootstrap kit that turns any repository into a Spec-Driven Development workspace
 
 > A practical bootstrap entry for teams that want consistent AI collaboration, explicit quality gates, and repeatable delivery flow.
 
-## Quick Start
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\scripts\init_spec_repo.ps1 --dry-run
-powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\scripts\init_spec_repo.ps1 --apply
-```
-
 ## Docs
 
 - [Install as a Codex Skill](#install-as-a-codex-skill-for-existing-projects)
@@ -31,6 +24,13 @@ It provides four core parts:
 - `skills/bingo-spec-coding-max-skill/`: manually triggered Skill definition
 - `skills/bingo-spec-coding-max-skill/scripts/`: cross-platform bootstrap scripts
 - generated outputs: project-level `AGENTS.md` and the `spec/` skeleton
+
+The current version also adds:
+
+- automatic generation of an enhanced repository-level `spec/SPEC_CONTEXT.md`
+- auto-detection for `Java`, `Frontend`, `Python`, and mixed repositories
+- draft runtime commands, test commands, source roots, core modules, and engineering constraints
+- conservative wording for low-confidence signals so inferred details are not presented as hard facts
 
 The goal is not to ship just another prompt. This repository provides a practical initialization entry point so later AI-assisted development can run around a consistent `Context -> Plan -> Spec -> Tasks -> Code` structure.
 
@@ -51,6 +51,8 @@ After initialization, the target repository should have:
 - existing repositories that need an AI-readable spec skeleton
 - teams that want a unified operating entry for Codex / GPT / Claude
 - workflows that need to separate high-risk changes from low-risk changes
+- repositories that want a usable first draft of `SPEC_CONTEXT` for Java / Frontend / Python stacks
+- mixed-stack repositories that want a multi-stack context draft before Plan / Spec / Tasks work starts
 
 ## Current Repository Layout
 
@@ -198,6 +200,14 @@ Windows:
 powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\scripts\setup_codex_skill_for_project.ps1 -TargetProject C:\path\to\your-project
 ```
 
+If you only want the one-step script to upgrade the skill already installed in Codex, without overwriting the target project's `doc/`, add:
+
+- macOS / Linux: `--upgrade-skill`
+- Windows: `-UpgradeSkill`
+
+If the skill is already installed and you do not pass `-UpgradeSkill` or `-Force`, the one-step script now skips skill installation and continues preparing the target project.
+If the target project's `doc/` already contains input files and you do not pass `-Force`, the one-step script also skips `doc/` preparation and preserves the existing content.
+
 If you only want to install the skill, use the installer below.
 
 macOS / Linux:
@@ -220,8 +230,22 @@ Default install mode:
 
 Optional install flags:
 
-- macOS / Linux: `--mode symlink|copy --force`
-- Windows: `-Mode symlink|copy -Force`
+- macOS / Linux: `--mode symlink|copy --force --upgrade`
+- Windows: `-Mode symlink|copy -Force -Upgrade`
+
+If you only want to upgrade the skill files already installed into Codex, without overwriting the target project's `doc/` inputs:
+
+macOS / Linux:
+
+```bash
+bash ./skills/bingo-spec-coding-max-skill/scripts/install_codex_skill.sh --upgrade
+```
+
+Windows:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\scripts\install_codex_skill.ps1 -Upgrade
+```
 
 If you want a manual install, place the skill directly under `$CODEX_HOME/skills/`.
 
@@ -243,16 +267,25 @@ After installation, Codex recognizes it as a local skill named `$bingo-spec-codi
 
 ### What the Target Project Must Provide
 
-Inside the existing project, prepare at least a `doc/` directory with these input files:
+Inside the existing project, prepare at least a `doc/` directory. Recommended layout:
 
 ```text
 doc/
-  spec_bootstrap_prompt_v6.md
-  change_classifier.prompt.md
-  generate_feature_tasks.prompt.md
-  generate_change_tasks.prompt.md
-  usage_examples.md
+  zh/
+    spec_bootstrap_prompt_v6.md
+    change_classifier.prompt.md
+    generate_feature_tasks.prompt.md
+    generate_change_tasks.prompt.md
+    usage_examples.md
+  en/
+    spec_bootstrap_prompt_v6.md
+    change_classifier.prompt.md
+    generate_feature_tasks.prompt.md
+    generate_change_tasks.prompt.md
+    usage_examples.md
 ```
+
+Initialization defaults to Chinese and reads `doc/zh/`. When English is selected, it reads `doc/en/`. For backward compatibility, the script still falls back to flat `doc/*.md` files.
 
 Recommended approaches:
 
@@ -306,15 +339,31 @@ If Codex needs to call scripts from the terminal, use the scripts under the skil
 macOS / Linux:
 
 ```bash
-bash "$CODEX_HOME/skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh" --project-root . --dry-run
-bash "$CODEX_HOME/skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh" --project-root . --apply
+bash "$CODEX_HOME/skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh" --project-root . --dry-run --language zh
+bash "$CODEX_HOME/skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh" --project-root . --apply --language zh
 ```
 
 Windows:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File $env:CODEX_HOME\skills\bingo-spec-coding-max-skill\scripts\init_spec_repo.ps1 --project-root . --dry-run
-powershell -ExecutionPolicy Bypass -File $env:CODEX_HOME\skills\bingo-spec-coding-max-skill\scripts\init_spec_repo.ps1 --project-root . --apply
+powershell -ExecutionPolicy Bypass -File $env:CODEX_HOME\skills\bingo-spec-coding-max-skill\scripts\init_spec_repo.ps1 --project-root . --dry-run -Language zh
+powershell -ExecutionPolicy Bypass -File $env:CODEX_HOME\skills\bingo-spec-coding-max-skill\scripts\init_spec_repo.ps1 --project-root . --apply -Language zh
+```
+
+If the project has already been initialized and you want to regenerate the spec scaffold:
+
+macOS / Linux:
+
+```bash
+bash "$CODEX_HOME/skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh" --project-root . --dry-run --upgrade --language zh
+bash "$CODEX_HOME/skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh" --project-root . --apply --upgrade --language zh
+```
+
+Windows:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File $env:CODEX_HOME\skills\bingo-spec-coding-max-skill\scripts\init_spec_repo.ps1 --project-root . --dry-run -Upgrade -Language zh
+powershell -ExecutionPolicy Bypass -File $env:CODEX_HOME\skills\bingo-spec-coding-max-skill\scripts\init_spec_repo.ps1 --project-root . --apply -Upgrade -Language zh
 ```
 
 ### Integration Constraints
@@ -386,8 +435,10 @@ bash ./skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh --apply
 
 - `--project-root <path>`: target project root, default is current directory
 - `--source-docs <path>`: input document directory, default is `<project-root>/doc`
+- `--language <zh|en>`: choose Chinese or English spec scaffolding, default is `zh`
 - `--force`: overwrite existing files
 - `--reinit`: ignore lock file and reinitialize
+- `--upgrade`: upgrade an existing spec bootstrap, equivalent to `--reinit --force`
 
 ## Initialization Output
 
@@ -406,6 +457,24 @@ Running `--apply` creates or writes:
 - `spec/prompts/*.md`
 - `spec/usage/usage_examples.md`
 - `.spec-bootstrap.lock`
+
+`spec/SPEC_CONTEXT.md` is now generated as an enhanced repository-context draft with these fixed sections:
+
+- Repository Summary
+- Core Modules
+- Runtime And Data Constraints
+- Testing And Validation Constraints
+- UI And Interface Constraints
+- Engineering Constraints
+- Domain Constraints
+- Non-functional Constraints
+- Assumptions And Unknowns
+
+Generation rules:
+
+- high-confidence signals are written directly into the draft, such as build tools, test commands, common source roots, and framework dependencies
+- low-confidence signals use conservative wording such as "detected", "potential", "suggested", or "confirmation needed"
+- weak-signal repositories fall back gracefully to a minimal context template instead of inventing architecture conclusions
 
 ## Resulting Directory Layout
 

@@ -2,7 +2,8 @@ param(
     [ValidateSet("symlink", "copy")]
     [string]$Mode = "copy",
     [string]$CodexHome = "",
-    [switch]$Force
+    [switch]$Force,
+    [switch]$Upgrade
 )
 
 if ([string]::IsNullOrWhiteSpace($CodexHome)) {
@@ -20,9 +21,12 @@ $targetDir = Join-Path $targetRoot "bingo-spec-coding-max-skill"
 
 New-Item -ItemType Directory -Force -Path $targetRoot | Out-Null
 
-if (Test-Path $targetDir) {
-    if (-not $Force) {
-        Write-Error "Target already exists: $targetDir . Re-run with -Force to replace it."
+$replaceExisting = $Force -or $Upgrade
+$existingTarget = Test-Path $targetDir
+
+if ($existingTarget) {
+    if (-not $replaceExisting) {
+        Write-Error "Target already exists: $targetDir . Re-run with -Force or -Upgrade to replace it."
         exit 1
     }
     Remove-Item -Recurse -Force $targetDir
@@ -30,11 +34,11 @@ if (Test-Path $targetDir) {
 
 if ($Mode -eq "symlink") {
     New-Item -ItemType SymbolicLink -Path $targetDir -Target $skillSourceDir | Out-Null
-    $action = "symlinked"
+    $action = if ($existingTarget) { "upgraded via symlink" } else { "symlinked" }
 }
 else {
     Copy-Item -Recurse -Force $skillSourceDir $targetDir
-    $action = "copied"
+    $action = if ($existingTarget) { "upgraded via copy" } else { "copied" }
 }
 
 Write-Output "[OK] Skill $action to: $targetDir"
