@@ -15,6 +15,7 @@ description: 初始化专用技能。仅在用户显式输入 `$bingo-spec-codin
 4. 已存在文件默认不覆盖，除非传 `--force`。
 5. 对已初始化项目做规范重建时，优先使用 `--upgrade`，它等价于 `--reinit --force`。
 6. 初始化时会自动生成仓库级 `SPEC_CONTEXT` 初稿，支持 Java / Frontend / Python / 混合仓库；不确定信息保留为“待确认”。
+7. 注入的分级规则采用三轴输出：`Requested Level / Final Level / Change Type / Doc Mode`，并内置外部契约强制 `L1`、无既有 spec 禁止直接 `L2`、`L3` 仅限最小安全补丁等规则。
 
 dry-run 预览应覆盖：
 

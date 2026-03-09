@@ -6,8 +6,9 @@
 
 - `plan.md`
 - `spec.md`
+- 已确认的分级输出，其中 `Final Level = L1`
 
-在两个输入都齐备前，不得生成任务。
+在上述输入齐备前，不得生成任务。
 
 ## Task Generation Rules
 
@@ -26,10 +27,11 @@
 ```markdown
 # Tasks: <feature-name>
 
-## Change Type
+## Classification
 
-L1
-Quality Gate: FEATURE
+Final Level: L1
+Change Type: FEATURE
+Doc Mode: FULL_SPEC
 
 ## Context
 

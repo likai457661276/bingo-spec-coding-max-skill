@@ -76,59 +76,44 @@ After initialization, the target repository should have:
 
 ## Change Classification
 
-This project uses two related expressions:
+The current version upgrades classification to three axes:
 
-- process levels: `L1 | L2 | L3`
-- quality gate types: `FEATURE | SMALL_CHANGE | BUG_FIX`
+- `Workflow Level`: `L1 | L2 | L3`
+- `Change Type`: `FEATURE | SMALL_CHANGE | BUG_FIX`
+- `Doc Mode`: `FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD`
+
+Before planning, task generation, or coding, the initialized project is expected to output:
+
+```text
+Requested Level: AUTO | L1 | L2 | L3
+Final Level: L1 | L2 | L3
+Change Type: FEATURE | SMALL_CHANGE | BUG_FIX
+Doc Mode: FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD
+Workflow: Context -> Plan -> Spec -> Tasks -> Code | Tasks -> Code | Patch Proposal -> Code
+Human Gate:
+Reason:
+Scope Signals:
+Escalation Note:
+```
+
+Hard rules:
+
+- external contract changes must be at least `L1 + FULL_SPEC`
+- do not use `L2` unless a reusable feature spec already exists
+- `L3` is only for the smallest safe patch
+- explicitly requested levels may raise conservatism, but may not bypass hard rules
+- `L1 / L2 / L3` must all generate concrete `.md` documents first, and coding or implementation-driving commands may continue only after user confirmation and a manual go-ahead
 
 Default mapping:
 
-- `L1 -> FEATURE`
-- `L2 -> SMALL_CHANGE`, or `BUG_FIX` if it is strictly a defect fix
-- `L3 -> BUG_FIX`
-
-### L1 Feature Change
-
-Scope:
-
-- new features
-- new APIs
-- new modules
-- database schema changes
-- important business logic changes
-
-Default flow:
-
-`Context -> Plan -> Spec -> Tasks -> Code`
-
-### L2 Small Change
-
-Scope:
-
-- regular bug fixes
-- validation rule corrections
-- logging improvements
-- limited-scope behavior adjustments
-
-Default flow:
-
-`Tasks -> Code`
-
-### L3 Hotfix
-
-Scope:
-
-- production incidents
-- security issues
-- urgent critical defects
-
-Default flow:
-
-`Patch Proposal -> Code`
+- `L1 -> FEATURE + FULL_SPEC`
+- `L2 -> SMALL_CHANGE/BUG_FIX + CHANGE_RECORD`
+- `L3 -> BUG_FIX + HOTFIX_RECORD`
 
 ## Human Gates
 
 This project explicitly requires human confirmation at defined checkpoints. AI must not classify a change and continue all the way to code commit without stopping at the required stage.
+More strictly, all three levels must first materialize the required `.md` document(s), then wait for user review and a manual go-ahead.
 
 ### Human Checkpoints for L1
 
@@ -143,6 +128,8 @@ Coding may start only when:
 - `Plan` is confirmed
 - `Spec` is confirmed
 - `Tasks` is confirmed
+- `plan.md`, `spec.md`, and `tasks.md` exist as concrete files
+- the user has manually told the agent to continue
 
 Do not skip any of these gates.
 
@@ -156,8 +143,10 @@ Coding may start only when:
 
 - the related feature spec has been read
 - `Tasks` is confirmed
+- `change.md` or an equivalent change-record `.md` exists as a concrete file
+- the user has manually told the agent to continue
 
-If analysis shows the change is no longer small, escalate it to `L1`.
+If analysis shows the change is no longer small, or there is no reusable feature spec at all, escalate it to `L1`.
 
 ### Human Checkpoints for L3
 
@@ -169,6 +158,8 @@ Coding may start only when:
 
 - the failure scope is located
 - the minimal patch is confirmed
+- `hotfix.md` or an equivalent patch-proposal `.md` exists as a concrete file
+- the user has manually told the agent to continue
 
 If the patch is no longer the smallest safe fix, slow down and escalate to `L2` or `L1`.
 

@@ -82,29 +82,35 @@ GENERATED_FILES_BY_LANGUAGE = {
 
 INIT -> ANALYSIS -> EXECUTION -> COMPLETED | FAILED | ABORTED
 
-## Spec Workflow
+## Classification First
 
-默认工作流：
+在进入规划、任务拆分或编码前，先完成三轴分级，并严格输出：
 
-Context -> Plan -> Spec -> Tasks -> Code
+Requested Level: AUTO | L1 | L2 | L3
+Final Level: L1 | L2 | L3
+Change Type: FEATURE | SMALL_CHANGE | BUG_FIX
+Doc Mode: FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD
+Workflow: Context -> Plan -> Spec -> Tasks -> Code | Tasks -> Code | Patch Proposal -> Code
+Human Gate:
+Reason:
+Scope Signals:
+Escalation Note:
 
-分级工作流：
+## Workflow Levels
+
+默认工作流：Context -> Plan -> Spec -> Tasks -> Code
 
 L1（Feature）: Context -> Plan -> Spec -> Tasks -> Code
 L2（Small Change）: Tasks -> Code
 L3（Hotfix）: Patch Proposal -> Code
 
-## Change Types
+## Hard Rules
 
-所有代码改动都必须声明以下之一：
-
-BUG_FIX | SMALL_CHANGE | FEATURE
-
-映射关系：
-
-L1 -> FEATURE
-L2 -> SMALL_CHANGE（纯缺陷修复可使用 BUG_FIX）
-L3 -> BUG_FIX
+1. 外部契约变更至少为 L1，且 Doc Mode 必须为 FULL_SPEC。
+2. L2 必须依附已有 feature spec；若无 spec，升级为 L1。
+3. L3 只能用于最小安全补丁；范围扩大即升级为 L2 或 L1。
+4. 用户或开发者显式指定等级只能上调，不能绕过强制规则。
+5. L1/L2/L3 都必须先生成实体 `.md` 文档，待用户确认并手动明确继续后，才能进入代码实现或命令执行。
 
 ## Human Gates
 
@@ -124,7 +130,7 @@ L3 需要在以下阶段后获得确认：
 
 ## Safe Execution Rule
 
-在当前变更级别要求的门禁明确通过之前，不得进入代码实现阶段。
+未完成分级输出、未生成当前级别要求的实体 `.md` 文档，或用户尚未确认并手动明确继续之前，不得进入代码实现阶段，也不得执行会推进实现的命令。
 """,
         "spec/INDEX.md": """# 规格索引
 
@@ -198,37 +204,56 @@ Agent 应从本文件进入规格树，再定位到 `spec/features/<feature-name
 
 Context -> Plan -> Spec -> Tasks -> Code
 
+## 分级决策顺序
+
+1. 先识别 `Requested Level` 是否被显式指定。
+2. 再判断是否命中外部契约变更。
+3. 再判断是否属于生产故障或安全紧急修复。
+4. 再判断是否存在可复用的既有 feature spec。
+5. 最后确定 `Change Type` 与 `Doc Mode`。
+
 ## 变更分级
 
 ### L1 Feature Change
 
-1. 分析仓库上下文
-2. 产出计划
-3. 产出功能规格
-4. 产出任务拆分
-5. 实施代码
-
-必须确认：Plan、Spec、Tasks。
+- Workflow: `Context -> Plan -> Spec -> Tasks -> Code`
+- Doc Mode: `FULL_SPEC`
+- 适用：新增能力、外部契约变更、跨模块设计变化、没有既有 spec 的行为变更
+- 强制门禁：必须先生成 `plan.md`、`spec.md`、`tasks.md` 并等待用户确认，之后仅在用户手动明确继续时进入编码
 
 ### L2 Small Change
 
-1. 阅读相关 feature spec
-2. 生成 change tasks
-3. 等待确认
-4. 实施代码
+- Workflow: `Tasks -> Code`
+- Doc Mode: `CHANGE_RECORD`
+- 前提：必须已有相关 feature spec；若无 spec，不得直接走 L2
+- 强制门禁：必须先生成实体 `change.md` 或等价变更 `.md` 文档并等待用户确认，之后仅在用户手动明确继续时进入编码
 
 ### L3 Hotfix
 
-1. 快速定位问题
-2. 提出最小补丁
-3. 等待确认
-4. 实施补丁
+- Workflow: `Patch Proposal -> Code`
+- Doc Mode: `HOTFIX_RECORD`
+- 前提：目标是尽快恢复服务，且补丁范围必须保持最小安全补丁
+- 强制门禁：必须先生成实体 `hotfix.md` 或等价补丁方案 `.md` 文档并等待用户确认，之后仅在用户手动明确继续时进入编码
 
-## 升级规则
+## 强制升级规则
 
-- 当 L2 超出局部修复范围时，升级为 L1。
-- 当 L3 不再是最小安全补丁时，升级为 L2 或 L1。
-- 当实现改变了既有行为时，必须回写规格文档。
+- 若涉及 API、数据库 schema、消息体、文件格式、权限边界等外部契约变化，必须升级为 `L1 + FULL_SPEC`。
+- 若相关 feature 不存在 `spec.md` 或基础规格记录，不得直接走 L2，必须升级为 `L1 + FULL_SPEC`。
+- 若 hotfix 已超出最小安全补丁，必须升级为 `L2` 或 `L1`。
+- 若实现改变了既有行为，必须同步回写规格文档。
+
+## Human Gate Rules
+
+- `L1`: after `Plan`, `Spec`, `Tasks`
+- `L2`: after `Tasks`
+- `L3`: after `Patch Proposal`
+
+## 文档先行规则
+
+- `L1`: 先落地 `plan.md`、`spec.md`、`tasks.md`
+- `L2`: 先落地 `change.md` 或等价变更记录 `.md`
+- `L3`: 先落地 `hotfix.md` 或等价补丁方案 `.md`
+- 所有级别都必须在文档落地并获得用户确认后，由用户手动明确继续，才可进入代码实现或执行推进实现的命令
 
 ## Prompt 路由
 
@@ -238,31 +263,54 @@ Context -> Plan -> Spec -> Tasks -> Code
 """,
         "spec/CHANGE_POLICY.md": """# CHANGE_POLICY
 
-## 允许的变更标签
+## 分类三轴
 
-1. FEATURE
-2. SMALL_CHANGE
-3. BUG_FIX
+1. Workflow Level：`L1 | L2 | L3`
+2. Change Type：`FEATURE | SMALL_CHANGE | BUG_FIX`
+3. Doc Mode：`FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD`
 
-## 映射规则
+## 外部契约变更
 
-1. L1 -> FEATURE
-2. L2 -> SMALL_CHANGE（纯缺陷修复可使用 BUG_FIX）
-3. L3 -> BUG_FIX
+命中以下任一信号，必须为 `L1 + FULL_SPEC`：
 
-## 执行护栏
+1. API 路径、方法、鉴权、状态码、错误码变化
+2. 请求字段、响应字段、字段语义、字段必填性变化
+3. 数据库 schema、迁移、索引、约束变化
+4. 消息体契约、事件结构、WebSocket 消息或导入导出文件格式变化
+5. 权限点、角色能力边界变化
+6. 任何会影响其他系统、前端、客户端或脚本调用方的接口行为变化
 
-1. 优先最小文件改动。
-2. L2/L3 避免引入架构变化。
-3. Hotfix 必须是最小安全补丁。
+## L2 约束
 
-## 文档规则
+1. 必须已有可复用的 feature `spec.md` 或基础规格记录。
+2. 若无既有 spec，不得直接走 `L2`，必须升级为 `L1 + FULL_SPEC`。
+3. 文档沉淀使用 `CHANGE_RECORD`，写入相关 feature 历史。
 
-1. L1 编码前必须先更新 plan、spec、tasks。
-2. L2 必须在相关 feature 下记录 change 历史。
-3. L3 稳定后必须补回规格历史。
+## L3 约束
+
+1. 仅用于生产故障、安全问题、线上关键失败的最小安全补丁。
+2. 若修复涉及跨模块重设计、新接口、新流程、大范围重构或完整新逻辑验证，必须升级为 `L2` 或 `L1`。
+3. 稳定后必须补回规格历史，文档模式为 `HOTFIX_RECORD`。
+
+## 覆盖规则
+
+1. 用户或开发者显式指定等级时，只能上调，不能违反强制规则下调。
+2. 信息不完整时，默认选择更保守、更慢的等级。
+
+## 文档执行门禁
+
+1. `L1` 必须先生成并保存 `plan.md`、`spec.md`、`tasks.md`。
+2. `L2` 必须先生成并保存实体 `change.md` 或等价变更记录 `.md`。
+3. `L3` 必须先生成并保存实体 `hotfix.md` 或等价补丁方案 `.md`。
+4. 上述文档未落地前，不得编码，也不得执行会推进实现的命令。
+5. 文档落地后，仍必须等待用户确认，并由用户手动明确继续。
 """,
         "spec/templates/PLAN_TEMPLATE.md": """# Plan: <feature-name>
+
+## Manual Execution Gate
+
+- 本文档是实体门禁文档之一，必须先保存为 `plan.md`
+- 用户确认并手动明确继续前，不得进入编码或执行推进实现的命令
 
 ## 问题陈述
 
@@ -293,6 +341,11 @@ Out of scope:
 """,
         "spec/templates/SPEC_TEMPLATE.md": """# Feature Spec: <feature-name>
 
+## Manual Execution Gate
+
+- 本文档是实体门禁文档之一，必须先保存为 `spec.md`
+- 用户确认并手动明确继续前，不得进入编码或执行推进实现的命令
+
 ## 背景
 
 描述用户问题和业务目标。
@@ -319,6 +372,17 @@ Out of scope:
 """,
         "spec/templates/TASK_TEMPLATE.md": """# Tasks: <feature-or-change-name>
 
+## Classification
+
+Final Level: L1
+Change Type: FEATURE
+Doc Mode: FULL_SPEC
+
+## Manual Execution Gate
+
+- 本文档是实体门禁文档之一，必须先保存为 `tasks.md`
+- 用户确认并手动明确继续前，不得进入编码或执行推进实现的命令
+
 ## 背景
 
 描述本组任务要解决的问题。
@@ -336,6 +400,22 @@ Out of scope:
 3. Rollback considerations:
 """,
         "spec/templates/CHANGE_TEMPLATE.md": """# Change: <change-name>
+
+## Classification
+
+Requested Level: AUTO | L1 | L2 | L3
+Final Level: L2
+Change Type: SMALL_CHANGE | BUG_FIX
+Doc Mode: CHANGE_RECORD
+Workflow: Tasks -> Code
+Human Gate: 先生成并保存 `change.md`，待用户确认并手动明确继续后才能进入代码实现
+
+## Preconditions
+
+- 相关 feature `spec.md` 已存在并已阅读
+- 若不存在既有 feature spec，升级为 `L1 + FULL_SPEC`
+- 必须先将本方案保存为实体 `change.md` 或等价变更记录 `.md`
+- 用户确认并手动明确继续前，不得进入编码或执行推进实现的命令
 
 ## 背景
 
@@ -366,6 +446,23 @@ Out of scope:
 - ...
 """,
         "spec/templates/HOTFIX_TEMPLATE.md": """# Hotfix: <incident-or-change-name>
+
+## Classification
+
+Requested Level: AUTO | L1 | L2 | L3
+Final Level: L3
+Change Type: BUG_FIX
+Doc Mode: HOTFIX_RECORD
+Workflow: Patch Proposal -> Code
+Human Gate: 先生成并保存 `hotfix.md`，待用户确认并手动明确继续后才能进入代码实现
+
+## Preconditions
+
+- 当前目标是尽快恢复服务
+- 补丁范围保持为最小安全补丁
+- 若范围扩大，升级为 `L2` 或 `L1`
+- 必须先将本方案保存为实体 `hotfix.md` 或等价补丁方案 `.md`
+- 用户确认并手动明确继续前，不得进入编码或执行推进实现的命令
 
 ## 事故背景
 
@@ -406,29 +503,35 @@ Out of scope:
 
 INIT -> ANALYSIS -> EXECUTION -> COMPLETED | FAILED | ABORTED
 
-## Spec Workflow
+## Classification First
 
-Default workflow:
+Before planning, task generation, or coding, classify the request on three axes and output exactly:
 
-Context -> Plan -> Spec -> Tasks -> Code
+Requested Level: AUTO | L1 | L2 | L3
+Final Level: L1 | L2 | L3
+Change Type: FEATURE | SMALL_CHANGE | BUG_FIX
+Doc Mode: FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD
+Workflow: Context -> Plan -> Spec -> Tasks -> Code | Tasks -> Code | Patch Proposal -> Code
+Human Gate:
+Reason:
+Scope Signals:
+Escalation Note:
 
-Change-level workflow:
+## Workflow Levels
+
+Default workflow: Context -> Plan -> Spec -> Tasks -> Code
 
 L1 (Feature): Context -> Plan -> Spec -> Tasks -> Code
 L2 (Small Change): Tasks -> Code
 L3 (Hotfix): Patch Proposal -> Code
 
-## Change Types
+## Hard Rules
 
-All code changes must declare one of:
-
-BUG_FIX | SMALL_CHANGE | FEATURE
-
-Mapping:
-
-L1 -> FEATURE
-L2 -> SMALL_CHANGE (or BUG_FIX if defect-only)
-L3 -> BUG_FIX
+1. External contract changes must be at least `L1`, and `Doc Mode` must be `FULL_SPEC`.
+2. `L2` requires an existing feature spec; if none exists, escalate to `L1`.
+3. `L3` is only for the smallest safe patch; if scope expands, escalate to `L2` or `L1`.
+4. User- or developer-requested levels may raise conservatism, but may not bypass hard rules.
+5. `L1` / `L2` / `L3` must all produce concrete `.md` documents first, and code or implementation-driving commands may continue only after user confirmation and a manual go-ahead.
 
 ## Human Gates
 
@@ -448,7 +551,7 @@ L3 requires approval after:
 
 ## Safe Execution Rule
 
-Do not implement code before the required gate for the current level is explicitly approved.
+Do not implement code, or run implementation-driving commands, before classification is complete, the required concrete `.md` document exists, and the user has confirmed it and manually told the agent to continue.
 """,
         "spec/INDEX.md": """# Spec Index
 
@@ -522,53 +625,56 @@ Agents should enter the spec tree from this file, then locate the relevant featu
 
 Context -> Plan -> Spec -> Tasks -> Code
 
+## Classification Order
+
+1. Check whether `Requested Level` was explicitly specified.
+2. Check whether the request changes an external contract.
+3. Check whether the work is a production or security hotfix.
+4. Check whether an existing feature spec can be reused.
+5. Then finalize `Change Type` and `Doc Mode`.
+
 ## Change Levels
 
 ### L1 Feature Change
 
-1. Analyze repository context
-2. Create plan
-3. Create feature spec
-4. Create tasks
-5. Implement code
-
-Required approvals: Plan, Spec, Tasks.
+- Workflow: `Context -> Plan -> Spec -> Tasks -> Code`
+- Doc Mode: `FULL_SPEC`
+- Use for: new capabilities, external contract changes, cross-module design work, or behavior changes without a reusable existing spec
+- Hard gate: generate `plan.md`, `spec.md`, and `tasks.md` first; wait for user review, and continue to code only after a manual go-ahead
 
 ### L2 Small Change
 
-1. Read existing feature spec
-2. Generate change tasks
-3. Wait for approval
-4. Implement code
+- Workflow: `Tasks -> Code`
+- Doc Mode: `CHANGE_RECORD`
+- Requirement: an existing related feature spec must already exist; otherwise escalate to `L1`
+- Hard gate: generate a concrete `change.md` or equivalent change record `.md` first; wait for user review, and continue to code only after a manual go-ahead
 
 ### L3 Hotfix
 
-1. Locate issue quickly
-2. Propose minimal patch
-3. Wait for approval
-4. Implement patch
+- Workflow: `Patch Proposal -> Code`
+- Doc Mode: `HOTFIX_RECORD`
+- Requirement: the goal is rapid restoration and the patch must stay minimal
+- Hard gate: generate a concrete `hotfix.md` or equivalent patch proposal `.md` first; wait for user review, and continue to code only after a manual go-ahead
+
+## Hard Escalation Rules
+
+- If the change affects APIs, database schema, message contracts, file formats, or permission boundaries, it must be `L1 + FULL_SPEC`.
+- If no existing `spec.md` or equivalent baseline spec exists for the feature, do not use `L2`; escalate to `L1 + FULL_SPEC`.
+- If a hotfix grows beyond the smallest safe patch, escalate to `L2` or `L1`.
+- If implementation changes behavior, update spec artifacts accordingly.
 
 ## Human Gate Rules
 
-### L1
+- `L1`: approval after `Plan`, `Spec`, and `Tasks`
+- `L2`: approval after `Tasks`
+- `L3`: approval after `Patch Proposal`
 
-- Approval after `Plan`
-- Approval after `Spec`
-- Approval after `Tasks`
+## Document-First Rule
 
-### L2
-
-- Approval after `Tasks`
-
-### L3
-
-- Approval after `Patch Proposal`
-
-## Escalation Rules
-
-- Escalate L2 to L1 when the change expands beyond a local fix.
-- Escalate L3 to L2 or L1 when the patch is no longer minimal.
-- Update spec artifacts when implementation changes documented behavior.
+- `L1`: create `plan.md`, `spec.md`, and `tasks.md` first
+- `L2`: create `change.md` or an equivalent change-record `.md` first
+- `L3`: create `hotfix.md` or an equivalent patch-proposal `.md` first
+- For every level, code work and implementation-driving commands must wait until the document exists, the user reviews it, and the user manually tells the agent to continue
 
 ## Prompt Routing
 
@@ -578,31 +684,54 @@ Required approvals: Plan, Spec, Tasks.
 """,
         "spec/CHANGE_POLICY.md": """# CHANGE_POLICY
 
-## Allowed Change Tags
+## Classification Axes
 
-1. FEATURE
-2. SMALL_CHANGE
-3. BUG_FIX
+1. Workflow Level: `L1 | L2 | L3`
+2. Change Type: `FEATURE | SMALL_CHANGE | BUG_FIX`
+3. Doc Mode: `FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD`
 
-## Mapping Rule
+## External Contract Changes
 
-1. L1 -> FEATURE
-2. L2 -> SMALL_CHANGE (or BUG_FIX for defect-only updates)
-3. L3 -> BUG_FIX
+Any of the following must be classified as `L1 + FULL_SPEC`:
 
-## Execution Guardrail
+1. API path, method, auth, status code, or error code changes
+2. Request or response field changes, semantic changes, or requiredness changes
+3. Database schema, migration, index, or constraint changes
+4. Message contracts, event payloads, WebSocket payloads, or import/export format changes
+5. Permission point or role-boundary changes
+6. Any caller-visible behavior change that affects other systems, frontend clients, mobile apps, or scripts
 
-1. Minimal-file-change first.
-2. Avoid architecture changes in L2/L3.
-3. Hotfix must target smallest safe patch.
+## L2 Constraints
 
-## Documentation Rule
+1. A reusable feature `spec.md` or equivalent baseline spec must already exist.
+2. If no baseline spec exists, do not use `L2`; escalate to `L1 + FULL_SPEC`.
+3. Documentation uses `CHANGE_RECORD` under the related feature history.
 
-1. L1 changes must update plan, spec, and tasks before coding.
-2. L2 changes must be recorded under the related feature change history.
-3. L3 hotfixes must be backfilled into spec history after stabilization.
+## L3 Constraints
+
+1. Only use `L3` for the smallest safe patch to a production incident, security issue, or critical runtime failure.
+2. If the fix requires cross-module redesign, a new interface, a new flow, a broad refactor, or full validation of new logic, escalate to `L2` or `L1`.
+3. After stabilization, backfill the spec history with `HOTFIX_RECORD`.
+
+## Override Rule
+
+1. An explicitly requested level may raise conservatism, but may not lower the level against hard rules.
+2. When information is incomplete, choose the more conservative and slower level.
+
+## Document Execution Gate
+
+1. `L1` must first generate and save `plan.md`, `spec.md`, and `tasks.md`.
+2. `L2` must first generate and save a concrete `change.md` or equivalent change-record `.md`.
+3. `L3` must first generate and save a concrete `hotfix.md` or equivalent patch-proposal `.md`.
+4. Before those documents exist, do not code and do not run implementation-driving commands.
+5. After the documents exist, still wait for user confirmation and a manual go-ahead.
 """,
         "spec/templates/PLAN_TEMPLATE.md": """# Plan: <feature-name>
+
+## Manual Execution Gate
+
+- This is one of the concrete gate documents and must first be saved as `plan.md`
+- Do not start coding or run implementation-driving commands before user confirmation and a manual go-ahead
 
 ## Problem Statement
 
@@ -633,6 +762,11 @@ Out of scope:
 """,
         "spec/templates/SPEC_TEMPLATE.md": """# Feature Spec: <feature-name>
 
+## Manual Execution Gate
+
+- This is one of the concrete gate documents and must first be saved as `spec.md`
+- Do not start coding or run implementation-driving commands before user confirmation and a manual go-ahead
+
 ## Background
 
 Describe user problem and business objective.
@@ -659,6 +793,17 @@ Out of scope:
 """,
         "spec/templates/TASK_TEMPLATE.md": """# Tasks: <feature-or-change-name>
 
+## Classification
+
+Final Level: L1
+Change Type: FEATURE
+Doc Mode: FULL_SPEC
+
+## Manual Execution Gate
+
+- This is one of the concrete gate documents and must first be saved as `tasks.md`
+- Do not start coding or run implementation-driving commands before user confirmation and a manual go-ahead
+
 ## Context
 
 Describe what this task set solves.
@@ -676,6 +821,22 @@ Describe what this task set solves.
 3. Rollback considerations:
 """,
         "spec/templates/CHANGE_TEMPLATE.md": """# Change: <change-name>
+
+## Classification
+
+Requested Level: AUTO | L1 | L2 | L3
+Final Level: L2
+Change Type: SMALL_CHANGE | BUG_FIX
+Doc Mode: CHANGE_RECORD
+Workflow: Tasks -> Code
+Human Gate: Save `change.md` first, then wait for user confirmation and a manual go-ahead before coding
+
+## Preconditions
+
+- Related feature `spec.md` exists and has been read
+- If no existing feature spec exists, escalate to `L1 + FULL_SPEC`
+- This plan must first be saved as a concrete `change.md` or equivalent change-record `.md`
+- Do not start coding or run implementation-driving commands before user confirmation and a manual go-ahead
 
 ## Context
 
@@ -706,6 +867,23 @@ Out of scope:
 - ...
 """,
         "spec/templates/HOTFIX_TEMPLATE.md": """# Hotfix: <incident-or-change-name>
+
+## Classification
+
+Requested Level: AUTO | L1 | L2 | L3
+Final Level: L3
+Change Type: BUG_FIX
+Doc Mode: HOTFIX_RECORD
+Workflow: Patch Proposal -> Code
+Human Gate: Save `hotfix.md` first, then wait for user confirmation and a manual go-ahead before coding
+
+## Preconditions
+
+- The goal is rapid service restoration
+- The patch remains the smallest safe patch
+- If scope expands, escalate to `L2` or `L1`
+- This proposal must first be saved as a concrete `hotfix.md` or equivalent patch-proposal `.md`
+- Do not start coding or run implementation-driving commands before user confirmation and a manual go-ahead
 
 ## Incident Context
 

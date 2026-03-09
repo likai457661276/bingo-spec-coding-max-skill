@@ -8,7 +8,7 @@
 
 `Context -> Plan -> Spec -> Tasks -> Code`
 
-但不是所有请求都走完整路径。开始执行前，必须先对请求分级，并路由到对应流程。
+但不是所有请求都走完整路径。开始执行前，必须先完成变更分级，并把请求路由到正确流程。
 
 这个初始化提示词不仅用于创建目录，也是以下内容的约束契约：
 
@@ -18,117 +18,60 @@
 - 生成文件的最小内容要求
 - AI 导航规则
 
----
+## STEP 0 - 先完成三轴分级
 
-## STEP 0 - 先完成变更分级
-
-先把请求分为以下等级之一：
-
-- `L1` - Feature Change
-- `L2` - Small Change
-- `L3` - Hotfix
-
-本体系同时使用质量门禁标签：
-
-- `FEATURE`
-- `SMALL_CHANGE`
-- `BUG_FIX`
-
-默认映射：
-
-- `L1 -> FEATURE`
-- `L2 -> SMALL_CHANGE`，纯缺陷修复可标为 `BUG_FIX`
-- `L3 -> BUG_FIX`
-
-### L1 - Feature Change
-
-以下情况使用 `L1`：
-
-- 新功能
-- 新 API
-- 新模块
-- 数据库 schema 变更
-- 重要业务逻辑扩展
-- 工作流或架构扩展
-
-### L2 - Small Change
-
-以下情况使用 `L2`：
-
-- 普通缺陷修复
-- 校验增强
-- 日志改进
-- 小范围行为调整
-- 不改变架构的局部重构
-
-### L3 - Hotfix
-
-以下情况使用 `L3`：
-
-- 生产故障
-- 安全问题
-- 关键运行时错误
-- 紧急恢复服务的修复
-
-### Required Output
-
-必须输出：
+在进入规划、任务拆分或编码前，必须先输出：
 
 ```text
-Change Level: L1 | L2 | L3
-Quality Gate: FEATURE | SMALL_CHANGE | BUG_FIX
+Requested Level: AUTO | L1 | L2 | L3
+Final Level: L1 | L2 | L3
+Change Type: FEATURE | SMALL_CHANGE | BUG_FIX
+Doc Mode: FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD
+Workflow: Context -> Plan -> Spec -> Tasks -> Code | Tasks -> Code | Patch Proposal -> Code
+Human Gate:
 Reason:
+Scope Signals:
+Escalation Note:
 ```
 
-如果范围不清晰，选择更保守、更慢的级别。
+分级顺序：
 
----
+1. 先识别是否存在显式指定等级
+2. 再判断是否命中外部契约变更
+3. 再判断是否属于生产故障或安全紧急修复
+4. 再判断是否存在可复用的既有 feature spec
+5. 最后再确定 `Change Type` 和 `Doc Mode`
+
+强制规则：
+
+- 外部契约变更必须为 `L1 + FULL_SPEC`
+- 没有既有 spec 不允许直接走 `L2`
+- `L3` 只能用于最小安全补丁
+- 人工指定等级只能上调，不能绕过强制规则
+- `L1 / L2 / L3` 都必须先生成实体 `.md` 文档，待用户确认并手动明确继续后，才能进入编码或执行推进实现的命令
+
+如果信息不完整，默认选择更保守、更慢的等级。
 
 ## STEP 1 - 人类门禁规则
 
 人类确认是强制的。到达门禁后，未获得明确批准前不得继续实现。
+更严格地说，必须先落地当前级别要求的实体 `.md` 文档，再等待用户确认与手动明确继续。
 
-### L1 Human Gates
-
-必须确认：
-
-1. `Plan` 之后
-2. `Spec` 之后
-3. `Tasks` 之后
-
-### L2 Human Gates
-
-必须确认：
-
-1. `Tasks` 之后
-
-若分析发现改动已不再“小”，必须升级为 `L1`。
-
-### L3 Human Gates
-
-必须确认：
-
-1. `Patch Proposal` 之后
-
-若补丁不再是最小安全修复，必须升级为 `L2` 或 `L1`。
-
----
+- `L1`: 在 `Plan`、`Spec`、`Tasks` 后确认
+- `L2`: 在 `Tasks` 后确认
+- `L3`: 在 `Patch Proposal` 后确认
 
 ## STEP 2 - 按级别选择流程
 
-### L1 Workflow
+- `L1`: `Context -> Plan -> Spec -> Tasks -> Code`
+- `L2`: `Tasks -> Code`
+- `L3`: `Patch Proposal -> Code`
 
-`Context -> Plan -> Spec -> Tasks -> Code`
+文档模式映射：
 
-### L2 Workflow
-
-`Tasks -> Code`
-
-### L3 Workflow
-
-`Patch Proposal -> Code`
-
----
+- `L1 -> FULL_SPEC`
+- `L2 -> CHANGE_RECORD`
+- `L3 -> HOTFIX_RECORD`
 
 ## STEP 3 - 初始化 Spec 仓库
 
@@ -151,8 +94,6 @@ AGENTS.md
 
 如果已存在，则安全初始化；除非明确允许，否则不要破坏性覆盖。
 
----
-
 ## STEP 4 - 最小内容契约
 
 所有生成文件都必须包含有用的起始内容，禁止空文件。
@@ -163,18 +104,48 @@ AGENTS.md
 
 - agent 回复语言约束
 - 明确状态模型
-- 默认工作流
+- 先分级再执行的规则
+- 三轴分级输出格式
 - `L1/L2/L3` 工作流摘要
-- `FEATURE/SMALL_CHANGE/BUG_FIX` 映射
+- 强制升级规则
 - 人类门禁检查点
 - 获批前不得编码的安全规则
 
-### `spec/INDEX.md`
+### `spec/SPEC_WORKFLOW.md`
 
 至少包含：
 
-- 核心 spec 文件链接
-- 模板链接
-- prompts 链接
-- `spec/features/` 导航规则
-- agent 如何进入 spec 树的说明
+- 分级决策顺序
+- `L1/L2/L3` 的 workflow 与 doc mode
+- 外部契约、无既有 spec、非最小 hotfix 的升级规则
+- prompt 路由
+
+### `spec/CHANGE_POLICY.md`
+
+至少包含：
+
+- `Workflow Level / Change Type / Doc Mode` 三轴定义
+- 外部契约变更信号
+- `L2` 与 `L3` 的边界约束
+- 文档回写要求
+- 文档先行、用户确认、手动继续的执行门禁
+
+### `spec/templates/CHANGE_TEMPLATE.md`
+
+至少包含：
+
+- `Requested Level / Final Level / Change Type / Doc Mode`
+- 相关 feature spec 前置条件
+- 无既有 spec 时升级为 `L1 + FULL_SPEC` 的说明
+
+### `spec/templates/HOTFIX_TEMPLATE.md`
+
+至少包含：
+
+- `Requested Level / Final Level / Change Type / Doc Mode`
+- 最小安全补丁前置条件
+- 超出 hotfix 边界时的升级说明
+
+## STEP 5 - Prompt 与示例
+
+注入的 `change_classifier.prompt.md`、`generate_feature_tasks.prompt.md`、`generate_change_tasks.prompt.md`、`usage_examples.md` 必须与上述三轴分级规则保持一致，不允许一半使用旧格式、一半使用新格式。

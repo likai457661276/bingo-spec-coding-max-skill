@@ -221,6 +221,45 @@ dependencies = [
             self.assertEqual(prompt_content, "# ZH bootstrap\n")
             self.assertIn("language=zh", lock_content)
 
+    def test_generated_policy_files_include_three_axis_classification_rules(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project_root = Path(tmpdir)
+            self.create_source_docs(project_root)
+
+            result = self.run_script(project_root, "--apply")
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+            agents_content = (project_root / "AGENTS.md").read_text(encoding="utf-8")
+            workflow_content = (project_root / "spec/SPEC_WORKFLOW.md").read_text(encoding="utf-8")
+            policy_content = (project_root / "spec/CHANGE_POLICY.md").read_text(encoding="utf-8")
+            change_template = (project_root / "spec/templates/CHANGE_TEMPLATE.md").read_text(encoding="utf-8")
+            hotfix_template = (project_root / "spec/templates/HOTFIX_TEMPLATE.md").read_text(encoding="utf-8")
+
+            self.assertIn("Requested Level: AUTO | L1 | L2 | L3", agents_content)
+            self.assertIn("Doc Mode: FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD", agents_content)
+            self.assertIn("外部契约变更至少为 L1", agents_content)
+            self.assertIn("都必须先生成实体 `.md` 文档", agents_content)
+
+            self.assertIn("分级决策顺序", workflow_content)
+            self.assertIn("若相关 feature 不存在 `spec.md`", workflow_content)
+            self.assertIn("Doc Mode: `HOTFIX_RECORD`", workflow_content)
+            self.assertIn("文档先行规则", workflow_content)
+            self.assertIn("由用户手动明确继续", workflow_content)
+
+            self.assertIn("Workflow Level：`L1 | L2 | L3`", policy_content)
+            self.assertIn("命中以下任一信号，必须为 `L1 + FULL_SPEC`", policy_content)
+            self.assertIn("若无既有 spec，不得直接走 `L2`", policy_content)
+            self.assertIn("文档执行门禁", policy_content)
+            self.assertIn("不得执行会推进实现的命令", policy_content)
+
+            self.assertIn("Doc Mode: CHANGE_RECORD", change_template)
+            self.assertIn("升级为 `L1 + FULL_SPEC`", change_template)
+            self.assertIn("实体 `change.md`", change_template)
+            self.assertIn("Doc Mode: HOTFIX_RECORD", hotfix_template)
+            self.assertIn("补丁范围保持为最小安全补丁", hotfix_template)
+            self.assertIn("实体 `hotfix.md`", hotfix_template)
+
     def test_explicit_english_language_switches_templates_and_docs(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             project_root = Path(tmpdir)

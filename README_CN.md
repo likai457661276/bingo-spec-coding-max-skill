@@ -65,59 +65,44 @@
 
 ## 变更分级
 
-本项目使用两层表达：
+当前版本把分级升级为三轴判断：
 
-- 流程分级：`L1 | L2 | L3`
-- 质量门禁类型：`FEATURE | SMALL_CHANGE | BUG_FIX`
+- `Workflow Level`: `L1 | L2 | L3`
+- `Change Type`: `FEATURE | SMALL_CHANGE | BUG_FIX`
+- `Doc Mode`: `FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD`
+
+进入规划、任务拆分或编码前，要求先输出：
+
+```text
+Requested Level: AUTO | L1 | L2 | L3
+Final Level: L1 | L2 | L3
+Change Type: FEATURE | SMALL_CHANGE | BUG_FIX
+Doc Mode: FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD
+Workflow: Context -> Plan -> Spec -> Tasks -> Code | Tasks -> Code | Patch Proposal -> Code
+Human Gate:
+Reason:
+Scope Signals:
+Escalation Note:
+```
+
+强制规则：
+
+- 外部契约变更必须至少为 `L1 + FULL_SPEC`
+- 没有既有 feature spec，不允许直接走 `L2`
+- `L3` 只能用于最小安全补丁
+- 用户或开发者显式指定等级只能上调，不能绕过硬规则降级
+- `L1 / L2 / L3` 都必须先生成实体 `.md` 文档，待用户确认并手动明确继续后，才能进入编码或执行推进实现的命令
 
 默认映射关系：
 
-- `L1 -> FEATURE`
-- `L2 -> SMALL_CHANGE`，若是纯缺陷修复也可归入 `BUG_FIX`
-- `L3 -> BUG_FIX`
-
-### L1 Feature Change
-
-适用范围：
-
-- 新功能
-- 新 API
-- 新模块
-- 数据库 schema 变更
-- 重要业务逻辑变更
-
-默认流程：
-
-`Context -> Plan -> Spec -> Tasks -> Code`
-
-### L2 Small Change
-
-适用范围：
-
-- 普通 bug fix
-- 校验规则修正
-- 日志改进
-- 范围有限的行为调整
-
-默认流程：
-
-`Tasks -> Code`
-
-### L3 Hotfix
-
-适用范围：
-
-- 生产故障
-- 安全问题
-- 紧急关键缺陷
-
-默认流程：
-
-`Patch Proposal -> Code`
+- `L1 -> FEATURE + FULL_SPEC`
+- `L2 -> SMALL_CHANGE/BUG_FIX + CHANGE_RECORD`
+- `L3 -> BUG_FIX + HOTFIX_RECORD`
 
 ## 人类门禁
 
 本项目明确要求：AI 不能只靠分级自动一路执行到代码提交，不同等级必须在不同阶段暂停，等待人类确认。
+更严格地说，三种等级都必须先把对应的实体 `.md` 文档落地，再等待用户确认并手动明确继续。
 
 ### L1 的人类介入时机
 
@@ -132,6 +117,8 @@
 - `Plan` 已确认
 - `Spec` 已确认
 - `Tasks` 已确认
+- `plan.md`、`spec.md`、`tasks.md` 已实际生成
+- 用户已手动明确继续
 
 不应跳过上述任一门禁直接编码。
 
@@ -145,8 +132,10 @@
 
 - 已读取相关 feature spec
 - `Tasks` 已确认
+- `change.md` 或等价变更记录 `.md` 已实际生成
+- 用户已手动明确继续
 
-如果变更在分析后发现已超出“小改动”边界，应升级为 `L1`。
+如果变更在分析后发现已超出“小改动”边界，或根本没有可复用的 feature spec，应升级为 `L1`。
 
 ### L3 的人类介入时机
 
@@ -158,6 +147,8 @@
 
 - 已定位问题范围
 - 最小补丁方案已确认
+- `hotfix.md` 或等价补丁方案 `.md` 已实际生成
+- 用户已手动明确继续
 
 如果补丁不再是“最小安全修复”，应降速并升级为 `L2` 或 `L1`。
 
