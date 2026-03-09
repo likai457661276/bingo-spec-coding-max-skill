@@ -9,6 +9,8 @@
 Bootstrap kit that turns any repository into a Spec-Driven Development workspace.
 
 > A practical bootstrap entry for teams that want consistent AI collaboration, explicit quality gates, and repeatable delivery flow.
+>
+> Core idea: help projects move from vibe coding to spec coding in a simple, low-friction way instead of adding cognitive burden for developers.
 
 ## Docs
 
@@ -32,11 +34,24 @@ The current version also adds:
 - draft runtime commands, test commands, source roots, core modules, and engineering constraints
 - conservative wording for low-confidence signals so inferred details are not presented as hard facts
 
-The goal is not to ship just another prompt. This repository provides a practical initialization entry point so later AI-assisted development can run around a consistent `Context -> Plan -> Spec -> Tasks -> Code` structure.
+The goal is not to ship just another prompt. This repository provides a practical initialization entry point so later AI-assisted development can run around a consistent `Context -> Plan -> Spec -> Tasks -> Code` structure while preserving developers' existing vibe coding habits as much as possible.
 
 ## Positioning
 
 This repository is a bootstrap kit for initializing Spec-driven collaboration rules.
+
+At the current stage, it is most accurate to describe it as an initializer plus workflow-framework injector:
+
+- it injects a consistent spec structure, prompts, templates, and approval gates into the target repository
+- it provides `L1/L2/L3` classification rules for the target project
+- it provides default workflow templates and entry conventions for each level
+
+The intended outcome is:
+
+- developers provide a broad request in their usual style
+- the initialized target project uses `AGENTS.md`, `SPEC_WORKFLOW.md`, and prompts to decide whether the work is `L1`, `L2`, or `L3`
+- the initialized target project then routes the request into the correct `Plan / Spec / Tasks / Patch Proposal`
+- the transition stays simple and lightweight instead of interrupting existing vibe coding habits
 
 After initialization, the target repository should have:
 
