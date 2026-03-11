@@ -21,6 +21,7 @@
 - [作为 Codex 技能接入现有项目](#作为-codex-技能接入现有项目)
 - [初始化输出](#初始化输出)
 - [使用示例](#使用示例)
+- [许可证](#许可证)
 
 它包含四部分能力：
 
@@ -663,3 +664,9 @@ Escalation Note: 如果排查后决定修改认证流程、接口行为或补丁
 
 - `skills/bingo-spec-coding-max-skill/resources/doc/usage_examples.md`
 - `spec/usage/usage_examples.md`，初始化后生成
+
+## 许可证
+
+本项目采用 [MIT License](./LICENSE) 开源发布。
+
+这意味着你可以在保留原协议声明的前提下，自由使用、复制、修改、分发和再授权本仓库代码；具体条款以 [LICENSE](./LICENSE) 为准。

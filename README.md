@@ -21,6 +21,7 @@ Bootstrap kit that turns any repository into a Spec-Driven Development workspace
 - [Install as a Codex Skill](#install-as-a-codex-skill-for-existing-projects)
 - [Initialization Output](#initialization-output)
 - [Examples](#examples)
+- [License](#license)
 
 It provides four core parts:
 
@@ -674,3 +675,9 @@ Detailed examples:
 
 - `skills/bingo-spec-coding-max-skill/resources/doc/usage_examples.md`
 - `spec/usage/usage_examples.md`, generated after initialization
+
+## License
+
+This project is released under the [MIT License](./LICENSE).
+
+You may use, copy, modify, distribute, and sublicense the repository as long as the original license notice is retained. See [LICENSE](./LICENSE) for the exact terms.
