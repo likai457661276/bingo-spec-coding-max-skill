@@ -7,6 +7,9 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPT_PATH = REPO_ROOT / "skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.py"
+SETUP_SH_PATH = REPO_ROOT / "skills/bingo-spec-coding-max-skill/scripts/setup_codex_skill_for_project.sh"
+INSTALL_SH_PATH = REPO_ROOT / "skills/bingo-spec-coding-max-skill/scripts/install_codex_skill.sh"
+SYNC_DOCS_SCRIPT_PATH = REPO_ROOT / "skills/bingo-spec-coding-max-skill/scripts/sync_skill_docs.py"
 
 
 class InitSpecRepoTests(unittest.TestCase):
@@ -17,6 +20,56 @@ class InitSpecRepoTests(unittest.TestCase):
                 str(SCRIPT_PATH),
                 "--project-root",
                 str(project_root),
+                *args,
+            ],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+    def run_setup_script(self, target_project: Path, codex_home: Path, *args: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            [
+                "bash",
+                str(SETUP_SH_PATH),
+                "--target-project",
+                str(target_project),
+                "--codex-home",
+                str(codex_home),
+                "--mode",
+                "copy",
+                *args,
+            ],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+    def run_sync_docs_script(self, script_path: Path, project_root: Path) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            [
+                sys.executable,
+                str(script_path),
+                "--project-root",
+                str(project_root),
+            ],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+    def run_install_script(self, codex_home: Path, *args: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            [
+                "bash",
+                str(INSTALL_SH_PATH),
+                "--codex-home",
+                str(codex_home),
+                "--mode",
+                "copy",
                 *args,
             ],
             cwd=REPO_ROOT,
@@ -231,34 +284,108 @@ dependencies = [
             self.assertEqual(result.returncode, 0, result.stderr)
 
             agents_content = (project_root / "AGENTS.md").read_text(encoding="utf-8")
+            index_content = (project_root / "spec/INDEX.md").read_text(encoding="utf-8")
             workflow_content = (project_root / "spec/SPEC_WORKFLOW.md").read_text(encoding="utf-8")
             policy_content = (project_root / "spec/CHANGE_POLICY.md").read_text(encoding="utf-8")
             change_template = (project_root / "spec/templates/CHANGE_TEMPLATE.md").read_text(encoding="utf-8")
             hotfix_template = (project_root / "spec/templates/HOTFIX_TEMPLATE.md").read_text(encoding="utf-8")
+            plan_template = (project_root / "spec/templates/PLAN_TEMPLATE.md").read_text(encoding="utf-8")
+            task_template = (project_root / "spec/templates/TASK_TEMPLATE.md").read_text(encoding="utf-8")
 
             self.assertIn("Requested Level: AUTO | L1 | L2 | L3", agents_content)
             self.assertIn("Doc Mode: FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD", agents_content)
             self.assertIn("外部契约变更至少为 L1", agents_content)
             self.assertIn("都必须先生成实体 `.md` 文档", agents_content)
 
+            self.assertIn("特性目录约定", index_content)
+            self.assertIn("spec/features/<feature-name>/smallchange/<date>-<change-name>.md", index_content)
+            self.assertIn("spec/features/<feature-name>/hotfix/<date>-<hotfix-name>.md", index_content)
+
             self.assertIn("分级决策顺序", workflow_content)
             self.assertIn("若相关 feature 不存在 `spec.md`", workflow_content)
             self.assertIn("Doc Mode: `HOTFIX_RECORD`", workflow_content)
             self.assertIn("文档先行规则", workflow_content)
             self.assertIn("由用户手动明确继续", workflow_content)
+            self.assertIn("spec/features/<feature-name>/smallchange/", workflow_content)
+            self.assertIn("spec/features/<feature-name>/hotfix/", workflow_content)
 
             self.assertIn("Workflow Level：`L1 | L2 | L3`", policy_content)
             self.assertIn("命中以下任一信号，必须为 `L1 + FULL_SPEC`", policy_content)
             self.assertIn("若无既有 spec，不得直接走 `L2`", policy_content)
             self.assertIn("文档执行门禁", policy_content)
             self.assertIn("不得执行会推进实现的命令", policy_content)
+            self.assertIn("spec/features/<feature-name>/smallchange/", policy_content)
+            self.assertIn("spec/features/<feature-name>/hotfix/", policy_content)
 
             self.assertIn("Doc Mode: CHANGE_RECORD", change_template)
             self.assertIn("升级为 `L1 + FULL_SPEC`", change_template)
-            self.assertIn("实体 `change.md`", change_template)
+            self.assertIn("spec/features/<feature-name>/smallchange/<date>-<change-name>.md", change_template)
             self.assertIn("Doc Mode: HOTFIX_RECORD", hotfix_template)
             self.assertIn("补丁范围保持为最小安全补丁", hotfix_template)
-            self.assertIn("实体 `hotfix.md`", hotfix_template)
+            self.assertIn("spec/features/<feature-name>/hotfix/<date>-<hotfix-name>.md", hotfix_template)
+            self.assertIn("spec/features/<feature-name>/plan.md", plan_template)
+            self.assertIn("spec/features/<feature-name>/tasks.md", task_template)
+
+    def test_upgrade_skill_refreshes_target_project_doc_and_spec_state(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            sandbox_root = Path(tmpdir)
+            target_project = sandbox_root / "target-project"
+            codex_home = sandbox_root / "codex-home"
+            target_project.mkdir(parents=True, exist_ok=True)
+
+            (target_project / "doc").mkdir(parents=True, exist_ok=True)
+            (target_project / "doc" / "legacy.txt").write_text("legacy doc\n", encoding="utf-8")
+            (target_project / "spec").mkdir(parents=True, exist_ok=True)
+            (target_project / "spec" / "legacy.md").write_text("legacy spec\n", encoding="utf-8")
+            (target_project / "AGENTS.md").write_text("legacy agents\n", encoding="utf-8")
+            (target_project / ".spec-bootstrap.lock").write_text("legacy lock\n", encoding="utf-8")
+
+            result = self.run_setup_script(target_project, codex_home, "--upgrade-skill")
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("Skill upgrade forces a full target-project refresh.", result.stdout)
+            self.assertFalse((target_project / "doc" / "legacy.txt").exists())
+            self.assertTrue((target_project / "doc" / "zh" / "spec_bootstrap_prompt_v6.md").exists())
+            self.assertFalse((target_project / "spec").exists())
+            self.assertFalse((target_project / "AGENTS.md").exists())
+            self.assertFalse((target_project / ".spec-bootstrap.lock").exists())
+            self.assertTrue((codex_home / "skills" / "bingo-spec-coding-max-skill").exists())
+
+    def test_sync_skill_docs_replaces_existing_target_doc_directory(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project_root = Path(tmpdir)
+            legacy_doc_dir = project_root / "doc"
+            legacy_doc_dir.mkdir(parents=True, exist_ok=True)
+            (legacy_doc_dir / "legacy.txt").write_text("legacy\n", encoding="utf-8")
+
+            result = self.run_sync_docs_script(SYNC_DOCS_SCRIPT_PATH, project_root)
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("Existing doc inputs cleared", result.stdout)
+            self.assertFalse((legacy_doc_dir / "legacy.txt").exists())
+            self.assertTrue((legacy_doc_dir / "zh" / "spec_bootstrap_prompt_v6.md").exists())
+            self.assertTrue((legacy_doc_dir / "en" / "change_classifier.prompt.md").exists())
+
+    def test_copy_install_bundles_doc_resources_for_sync_script(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            sandbox_root = Path(tmpdir)
+            codex_home = sandbox_root / "codex-home"
+            target_project = sandbox_root / "target-project"
+            target_project.mkdir(parents=True, exist_ok=True)
+
+            install_result = self.run_install_script(codex_home)
+            self.assertEqual(install_result.returncode, 0, install_result.stderr)
+
+            installed_sync_script = codex_home / "skills" / "bingo-spec-coding-max-skill" / "scripts" / "sync_skill_docs.py"
+            bundled_doc_dir = codex_home / "skills" / "bingo-spec-coding-max-skill" / "resources" / "doc"
+
+            self.assertTrue(installed_sync_script.exists())
+            self.assertTrue(bundled_doc_dir.exists())
+
+            sync_result = self.run_sync_docs_script(installed_sync_script, target_project)
+
+            self.assertEqual(sync_result.returncode, 0, sync_result.stderr)
+            self.assertTrue((target_project / "doc" / "zh" / "usage_examples.md").exists())
 
     def test_explicit_english_language_switches_templates_and_docs(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

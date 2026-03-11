@@ -20,6 +20,14 @@ Scope Signals: 新增登录页面；新增认证接口；新增 JWT 签发流程
 Escalation Note: None
 ```
 
+落地路径：
+
+- `spec/features/auth-login/plan.md`
+- `spec/features/auth-login/spec.md`
+- `spec/features/auth-login/tasks.md`
+- `spec/features/auth-login/smallchange/`
+- `spec/features/auth-login/hotfix/`
+
 ## 示例 2 - 密码校验缺陷
 
 需求：
@@ -40,6 +48,10 @@ Scope Signals: 登录能力已存在；已有 feature spec 可复用；仅修复
 Escalation Note: 如果修复扩大到认证流程重构、字段语义调整或接口行为变化，则升级为 L1
 ```
 
+落地路径：
+
+- `spec/features/auth-login/smallchange/2026-03-09-trim-password-input.md`
+
 ## 示例 3 - 生产环境令牌故障
 
 需求：
@@ -59,3 +71,7 @@ Reason: 该请求属于生产故障修复，当前目标是以最小安全补丁
 Scope Signals: 生产环境大面积失败；目标是快速止血；补丁范围限定在 JWT 校验入口；未引入新接口
 Escalation Note: 如果补丁扩大到认证链路重设计、接口调整或大范围重构，则升级为 L2 或 L1
 ```
+
+落地路径：
+
+- `spec/features/auth-login/hotfix/2026-03-09-jwt-validation-patch.md`

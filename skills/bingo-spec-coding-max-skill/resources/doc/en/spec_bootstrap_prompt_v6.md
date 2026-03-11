@@ -49,6 +49,7 @@ Hard rules:
 - `L3` is only for the smallest safe patch
 - explicitly requested levels may raise conservatism, but may not bypass hard rules
 - `L1 / L2 / L3` must all generate concrete `.md` documents first, and coding or implementation-driving commands may continue only after user confirmation and a manual go-ahead
+- all requirement documents must live under `spec/features/<feature-name>/`; do not scatter them directly under `spec/`
 
 When information is incomplete, choose the more conservative and slower level.
 
@@ -73,6 +74,13 @@ Doc mode mapping:
 - `L2 -> CHANGE_RECORD`
 - `L3 -> HOTFIX_RECORD`
 
+Directory rules:
+
+- `L1`: `spec/features/<feature-name>/plan.md`, `spec/features/<feature-name>/spec.md`, and `spec/features/<feature-name>/tasks.md`
+- `L2`: `spec/features/<feature-name>/smallchange/<date>-<change-name>.md`
+- `L3`: `spec/features/<feature-name>/hotfix/<date>-<hotfix-name>.md`
+- when a feature folder is created, create `smallchange/` and `hotfix/` under it too
+
 ## STEP 3 - Initialize Spec Repository
 
 Create:
@@ -88,6 +96,19 @@ spec/
   usage/
   features/
 AGENTS.md
+```
+
+When handling an actual requirement later, the structure must expand to:
+
+```text
+spec/
+  features/
+    <feature-name>/
+      plan.md
+      spec.md
+      tasks.md
+      smallchange/
+      hotfix/
 ```
 
 Create `AGENTS.md` when it does not exist.
@@ -117,6 +138,7 @@ Must include at least:
 
 - classification decision order
 - workflow and doc mode for `L1/L2/L3`
+- feature-folder rules plus `smallchange/` and `hotfix/` subdirectory rules
 - escalation rules for external contract changes, missing feature specs, and non-minimal hotfixes
 - prompt routing
 
@@ -127,6 +149,7 @@ Must include at least:
 - the three axes: `Workflow Level / Change Type / Doc Mode`
 - external contract change signals
 - `L2` and `L3` boundary rules
+- path rules for `L2/L3` documentation
 - documentation backfill requirements
 - the document-first, user-confirmed, manual-continue execution gate
 

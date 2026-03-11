@@ -49,6 +49,7 @@ Escalation Note:
 - `L3` 只能用于最小安全补丁
 - 人工指定等级只能上调，不能绕过强制规则
 - `L1 / L2 / L3` 都必须先生成实体 `.md` 文档，待用户确认并手动明确继续后，才能进入编码或执行推进实现的命令
+- 所有需求文档都必须归档到 `spec/features/<feature-name>/` 下，禁止直接散落在 `spec/` 根目录
 
 如果信息不完整，默认选择更保守、更慢的等级。
 
@@ -73,6 +74,13 @@ Escalation Note:
 - `L2 -> CHANGE_RECORD`
 - `L3 -> HOTFIX_RECORD`
 
+目录落点规则：
+
+- `L1`: `spec/features/<feature-name>/plan.md`、`spec/features/<feature-name>/spec.md`、`spec/features/<feature-name>/tasks.md`
+- `L2`: `spec/features/<feature-name>/smallchange/<date>-<change-name>.md`
+- `L3`: `spec/features/<feature-name>/hotfix/<date>-<hotfix-name>.md`
+- 创建 feature 目录时，同步建立 `smallchange/` 与 `hotfix/` 子目录
+
 ## STEP 3 - 初始化 Spec 仓库
 
 创建以下结构：
@@ -88,6 +96,19 @@ spec/
   usage/
   features/
 AGENTS.md
+```
+
+后续处理具体需求时，必须进一步使用如下结构：
+
+```text
+spec/
+  features/
+    <feature-name>/
+      plan.md
+      spec.md
+      tasks.md
+      smallchange/
+      hotfix/
 ```
 
 如果项目级 `AGENTS.md` 不存在，则创建。
@@ -117,6 +138,7 @@ AGENTS.md
 
 - 分级决策顺序
 - `L1/L2/L3` 的 workflow 与 doc mode
+- feature 目录与 `smallchange/`、`hotfix/` 子目录约束
 - 外部契约、无既有 spec、非最小 hotfix 的升级规则
 - prompt 路由
 
@@ -127,6 +149,7 @@ AGENTS.md
 - `Workflow Level / Change Type / Doc Mode` 三轴定义
 - 外部契约变更信号
 - `L2` 与 `L3` 的边界约束
+- `L2/L3` 文档落点路径
 - 文档回写要求
 - 文档先行、用户确认、手动继续的执行门禁
 

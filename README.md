@@ -22,7 +22,7 @@ Bootstrap kit that turns any repository into a Spec-Driven Development workspace
 
 It provides four core parts:
 
-- `doc/`: bootstrap specs, classifier prompts, task-generation prompts, and examples
+- `skills/bingo-spec-coding-max-skill/resources/doc/`: skill-bundled bootstrap specs, classifier prompts, task-generation prompts, and examples
 - `skills/bingo-spec-coding-max-skill/`: manually triggered Skill definition
 - `skills/bingo-spec-coding-max-skill/scripts/`: cross-platform bootstrap scripts
 - generated outputs: project-level `AGENTS.md` and the `spec/` skeleton
@@ -71,7 +71,7 @@ After initialization, the target repository should have:
 
 ## Current Repository Layout
 
-- `doc/`: bootstrap input documents
+- `skills/bingo-spec-coding-max-skill/resources/doc/`: skill-bundled bootstrap input documents
 - `skills/bingo-spec-coding-max-skill/`: Skill definition and cross-platform bootstrap scripts
 
 ## Change Classification
@@ -128,7 +128,7 @@ Coding may start only when:
 - `Plan` is confirmed
 - `Spec` is confirmed
 - `Tasks` is confirmed
-- `plan.md`, `spec.md`, and `tasks.md` exist as concrete files
+- `spec/features/<feature-name>/plan.md`, `spec/features/<feature-name>/spec.md`, and `spec/features/<feature-name>/tasks.md` exist as concrete files
 - the user has manually told the agent to continue
 
 Do not skip any of these gates.
@@ -143,7 +143,7 @@ Coding may start only when:
 
 - the related feature spec has been read
 - `Tasks` is confirmed
-- `change.md` or an equivalent change-record `.md` exists as a concrete file
+- `spec/features/<feature-name>/smallchange/<date>-<change-name>.md` or an equivalent change-record `.md` exists as a concrete file
 - the user has manually told the agent to continue
 
 If analysis shows the change is no longer small, or there is no reusable feature spec at all, escalate it to `L1`.
@@ -158,7 +158,7 @@ Coding may start only when:
 
 - the failure scope is located
 - the minimal patch is confirmed
-- `hotfix.md` or an equivalent patch-proposal `.md` exists as a concrete file
+- `spec/features/<feature-name>/hotfix/<date>-<hotfix-name>.md` or an equivalent patch-proposal `.md` exists as a concrete file
 - the user has manually told the agent to continue
 
 If the patch is no longer the smallest safe fix, slow down and escalate to `L2` or `L1`.
@@ -192,29 +192,15 @@ Benefits:
 
 ### Install into Codex
 
-Prefer the one-step setup script shipped with this repository. It installs `bingo-spec-coding-max-skill` into `$CODEX_HOME/skills/` and copies the `doc/` input templates into the target project.
+The recommended path is now simple:
 
-macOS / Linux:
+1. install `bingo-spec-coding-max-skill` into `$CODEX_HOME/skills/`
+2. open the target project in Codex
+3. directly trigger `$bingo-spec-coding-max-skill` inside the target project
 
-```bash
-bash ./skills/bingo-spec-coding-max-skill/scripts/setup_codex_skill_for_project.sh --target-project /path/to/your-project
-```
+After the trigger, the skill automatically refreshes the current project's `doc/` and then starts the `dry-run` initialization flow.
 
-Windows:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\scripts\setup_codex_skill_for_project.ps1 -TargetProject C:\path\to\your-project
-```
-
-If you only want the one-step script to upgrade the skill already installed in Codex, without overwriting the target project's `doc/`, add:
-
-- macOS / Linux: `--upgrade-skill`
-- Windows: `-UpgradeSkill`
-
-If the skill is already installed and you do not pass `-UpgradeSkill` or `-Force`, the one-step script now skips skill installation and continues preparing the target project.
-If the target project's `doc/` already contains input files and you do not pass `-Force`, the one-step script also skips `doc/` preparation and preserves the existing content.
-
-If you only want to install the skill, use the installer below.
+Install command:
 
 macOS / Linux:
 
@@ -239,7 +225,7 @@ Optional install flags:
 - macOS / Linux: `--mode symlink|copy --force --upgrade`
 - Windows: `-Mode symlink|copy -Force -Upgrade`
 
-If you only want to upgrade the skill files already installed into Codex, without overwriting the target project's `doc/` inputs:
+If you only want to upgrade the skill files already installed into Codex:
 
 macOS / Linux:
 
@@ -273,7 +259,9 @@ After installation, Codex recognizes it as a local skill named `$bingo-spec-codi
 
 ### What the Target Project Must Provide
 
-Inside the existing project, prepare at least a `doc/` directory. Recommended layout:
+The target project does not need manual `doc/` preparation. When you manually trigger the skill, it deletes the current project's existing `doc/` first and then syncs the latest template set.
+
+After sync, the target project's `doc/` layout is:
 
 ```text
 doc/
@@ -293,40 +281,13 @@ doc/
 
 Initialization defaults to Chinese and reads `doc/zh/`. When English is selected, it reads `doc/en/`. For backward compatibility, the script still falls back to flat `doc/*.md` files.
 
-Recommended approaches:
-
-1. copy `doc/` from this repository into the target project
-2. maintain your own `doc/` version in the target project and reuse the current skill
-
-If the target project does not contain these files, the bootstrap script fails with a missing-input error.
-
-If you only want to prepare the target project, use the preparation script:
-
-macOS / Linux:
-
-```bash
-bash ./skills/bingo-spec-coding-max-skill/scripts/prepare_target_project.sh --target-project /path/to/your-project
-```
-
-Windows:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\scripts\prepare_target_project.ps1 -TargetProject C:\path\to\your-project
-```
-
-If `doc/` already exists and you want to overwrite it:
-
-- macOS / Linux: add `--force`
-- Windows: add `-Force`
-
-This script only writes the bootstrap input templates to the target project. It does not run spec initialization.
+If you want to refresh `doc/` outside Codex, you can still run `sync_skill_docs.py` manually, but that is no longer required for the normal path.
 
 ### How to Trigger It in the Target Project
 
 1. open the target project root in Codex
 2. make sure the current working directory is the target project, not the skill repository
-3. if `doc/` is not prepared yet, run the preparation script first
-4. explicitly enter:
+3. explicitly enter:
 
 ```text
 Please run $bingo-spec-coding-max-skill for the current project. Start with dry-run, then apply after confirmation.
@@ -335,12 +296,13 @@ Please run $bingo-spec-coding-max-skill for the current project. Start with dry-
 Codex should:
 
 - read `$CODEX_HOME/skills/bingo-spec-coding-max-skill/SKILL.md`
+- automatically run `sync_skill_docs.py` first to refresh the current project's `doc/`
 - use the current project's `doc/` as input
 - generate `AGENTS.md`, `spec/`, and `.spec-bootstrap.lock` inside the current project
 
 ### Recommended Execution Commands
 
-If Codex needs to call scripts from the terminal, use the scripts under the skill directory and point `project-root` to the current project.
+If Codex needs to call scripts from the terminal, use the scripts under the skill directory and point `project-root` to the current project. The equivalent command order is:
 
 macOS / Linux:
 
@@ -372,10 +334,12 @@ powershell -ExecutionPolicy Bypass -File $env:CODEX_HOME\skills\bingo-spec-codin
 powershell -ExecutionPolicy Bypass -File $env:CODEX_HOME\skills\bingo-spec-coding-max-skill\scripts\init_spec_repo.ps1 --project-root . --apply -Upgrade -Language zh
 ```
 
+If the skill was just upgraded, or the project has already been initialized before, simply trigger `$bingo-spec-coding-max-skill` again. The skill refreshes `doc/` first and then runs the new initialization preview.
+
 ### Integration Constraints
 
 - the skill directory provides capability, but should not store business project outputs
-- the target project must maintain its own `doc/` inputs
+- the skill refreshes the target project's `doc/` inputs automatically
 - the first run must start with `dry-run`
 - `apply` should run only after explicit user confirmation
 - if `.spec-bootstrap.lock` already exists, do not reinitialize unless explicitly requested
@@ -389,11 +353,9 @@ macOS / Linux:
 ```bash
 export CODEX_HOME="$HOME/.codex"
 
-bash ./skills/bingo-spec-coding-max-skill/scripts/setup_codex_skill_for_project.sh --target-project /path/to/existing-project
+bash ./skills/bingo-spec-coding-max-skill/scripts/install_codex_skill.sh
 
 cd /path/to/existing-project
-
-bash "$CODEX_HOME/skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh" --project-root . --dry-run
 ```
 
 Inside Codex, you can then enter:
@@ -407,16 +369,14 @@ Windows:
 ```powershell
 $env:CODEX_HOME = "$HOME\.codex"
 
-powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\scripts\setup_codex_skill_for_project.ps1 -TargetProject C:\path\to\existing-project
+powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\scripts\install_codex_skill.ps1
 
 Set-Location C:\path\to\existing-project
-
-powershell -ExecutionPolicy Bypass -File $env:CODEX_HOME\skills\bingo-spec-coding-max-skill\scripts\init_spec_repo.ps1 --project-root . --dry-run
 ```
 
 Expected result:
 
-- the target project gets the `doc/` input templates
+- the skill automatically refreshes the target project's `doc/` input templates
 - Codex can recognize `$bingo-spec-coding-max-skill`
 - `dry-run` previews `AGENTS.md`, `spec/`, templates, and prompts
 - after confirmation, `apply` can continue
@@ -493,7 +453,15 @@ Generation rules:
 │   ├── SPEC_WORKFLOW.md
 │   ├── CHANGE_POLICY.md
 │   ├── features
-│   │   └── .gitkeep
+│   │   ├── .gitkeep
+│   │   └── auth-login
+│   │       ├── plan.md
+│   │       ├── spec.md
+│   │       ├── tasks.md
+│   │       ├── smallchange
+│   │       │   └── 2026-03-09-trim-password-input.md
+│   │       └── hotfix
+│   │           └── 2026-03-09-jwt-validation-patch.md
 │   ├── prompts
 │   │   ├── spec_bootstrap_prompt_v6.md
 │   │   ├── change_classifier.prompt.md
@@ -516,6 +484,9 @@ Where:
 - `spec/templates/CHANGE_TEMPLATE.md` is used for `L2`
 - `spec/templates/HOTFIX_TEMPLATE.md` is used for `L3`
 - `spec/features/` is the root directory for future feature specs and change history
+- `L1` docs live under `spec/features/<feature-name>/`
+- `L2` history lives under `spec/features/<feature-name>/smallchange/`
+- `L3` history lives under `spec/features/<feature-name>/hotfix/`
 
 ## Examples
 
@@ -533,5 +504,5 @@ Please run $bingo-spec-coding-max-skill to initialize the current repository. St
 
 Detailed examples:
 
-- `doc/usage_examples.md`
+- `skills/bingo-spec-coding-max-skill/resources/doc/usage_examples.md`
 - `spec/usage/usage_examples.md`, generated after initialization

@@ -22,7 +22,7 @@
 
 它包含四部分能力：
 
-- `doc/`: 初始化规范、分类提示词、任务生成提示词、示例
+- `skills/bingo-spec-coding-max-skill/resources/doc/`: skill 内置初始化规范、分类提示词、任务生成提示词、示例
 - `skills/bingo-spec-coding-max-skill/`: 手动触发的 Skill 定义
 - `skills/bingo-spec-coding-max-skill/scripts/`: 跨平台初始化脚本
 - 生成产物：项目级 `AGENTS.md` 与 `spec/` 目录骨架
@@ -60,7 +60,7 @@
 
 ## 当前仓库结构
 
-- `doc/`: 初始化输入文档
+- `skills/bingo-spec-coding-max-skill/resources/doc/`: skill 内置初始化输入文档
 - `skills/bingo-spec-coding-max-skill/`: Skill 定义与跨平台初始化脚本
 
 ## 变更分级
@@ -117,7 +117,7 @@ Escalation Note:
 - `Plan` 已确认
 - `Spec` 已确认
 - `Tasks` 已确认
-- `plan.md`、`spec.md`、`tasks.md` 已实际生成
+- `spec/features/<feature-name>/plan.md`、`spec/features/<feature-name>/spec.md`、`spec/features/<feature-name>/tasks.md` 已实际生成
 - 用户已手动明确继续
 
 不应跳过上述任一门禁直接编码。
@@ -132,7 +132,7 @@ Escalation Note:
 
 - 已读取相关 feature spec
 - `Tasks` 已确认
-- `change.md` 或等价变更记录 `.md` 已实际生成
+- `spec/features/<feature-name>/smallchange/<date>-<change-name>.md` 或等价变更记录 `.md` 已实际生成
 - 用户已手动明确继续
 
 如果变更在分析后发现已超出“小改动”边界，或根本没有可复用的 feature spec，应升级为 `L1`。
@@ -147,7 +147,7 @@ Escalation Note:
 
 - 已定位问题范围
 - 最小补丁方案已确认
-- `hotfix.md` 或等价补丁方案 `.md` 已实际生成
+- `spec/features/<feature-name>/hotfix/<date>-<hotfix-name>.md` 或等价补丁方案 `.md` 已实际生成
 - 用户已手动明确继续
 
 如果补丁不再是“最小安全修复”，应降速并升级为 `L2` 或 `L1`。
@@ -181,32 +181,15 @@ Escalation Note:
 
 ### 安装到 Codex
 
-建议优先使用仓库自带的一步式脚本，它会同时完成：
+推荐的主路径现在很简单：
 
-- 安装 `bingo-spec-coding-max-skill` 到 `$CODEX_HOME/skills/`
-- 将 `doc/` 输入模板复制到目标项目
+1. 先把 `bingo-spec-coding-max-skill` 安装到 `$CODEX_HOME/skills/`
+2. 用 Codex 打开目标项目
+3. 在目标项目里直接手动触发 `$bingo-spec-coding-max-skill`
 
-macOS / Linux:
+触发后，skill 会先自动刷新当前项目的 `doc/`，再进入 `dry-run` 初始化。
 
-```bash
-bash ./skills/bingo-spec-coding-max-skill/scripts/setup_codex_skill_for_project.sh --target-project /path/to/your-project
-```
-
-Windows:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\scripts\setup_codex_skill_for_project.ps1 -TargetProject C:\path\to\your-project
-```
-
-如果只想通过一步式脚本升级 Codex 中已安装的技能，而不覆盖目标项目 `doc/`，可以追加：
-
-- macOS / Linux: `--upgrade-skill`
-- Windows: `-UpgradeSkill`
-
-如果 skill 已经安装且未显式传 `-UpgradeSkill` 或 `-Force`，一步式脚本会跳过 skill 安装并继续准备目标项目。
-如果目标项目的 `doc/` 已经有输入文件且未显式传 `-Force`，一步式脚本也会跳过 `doc/` 准备并保留现有内容。
-
-如果你只想单独安装 skill，再使用下方安装脚本。
+安装命令：
 
 macOS / Linux:
 
@@ -231,7 +214,7 @@ powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\sc
 - macOS / Linux: `--mode symlink|copy --force --upgrade`
 - Windows: `-Mode symlink|copy -Force -Upgrade`
 
-如果你只想升级已安装到 Codex 的技能文件，而不覆盖目标项目里的 `doc/` 输入：
+如果你只想升级已安装到 Codex 的技能文件：
 
 macOS / Linux:
 
@@ -265,7 +248,9 @@ cp -R "/path/to/bingo-spec-coding-max-skill/skills/bingo-spec-coding-max-skill" 
 
 ### 目标项目需要准备什么
 
-在现有项目中，至少准备一个 `doc/` 目录。推荐结构如下：
+目标项目不需要手动准备 `doc/`。手动触发 skill 时，它会先删除当前项目已有的 `doc/`，再同步一份最新模板。
+
+同步后的 `doc/` 结构如下：
 
 ```text
 doc/
@@ -285,40 +270,13 @@ doc/
 
 默认初始化语言为中文，即优先读取 `doc/zh/`；传入英文语言参数时读取 `doc/en/`。为了兼容旧版本，脚本仍可回退读取平铺的 `doc/*.md`。
 
-推荐做法有两种：
-
-1. 从本仓库复制 `doc/` 到目标项目
-2. 由你的团队在目标项目内维护自己的 `doc/` 版本，再复用当前 skill
-
-如果目标项目没有这些文件，初始化脚本会报缺失错误并停止。
-
-如果你只想单独准备目标项目，也可以使用准备脚本：
-
-macOS / Linux:
-
-```bash
-bash ./skills/bingo-spec-coding-max-skill/scripts/prepare_target_project.sh --target-project /path/to/your-project
-```
-
-Windows:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\scripts\prepare_target_project.ps1 -TargetProject C:\path\to\your-project
-```
-
-如果目标项目里已经存在 `doc/` 文件并且你确认要覆盖：
-
-- macOS / Linux: 追加 `--force`
-- Windows: 追加 `-Force`
-
-这个脚本只负责把初始化输入模板写入目标项目，不会执行 spec 初始化。
+如果你只想脱离 Codex，单独刷新目标项目的 `doc/`，仍可手动执行 `sync_skill_docs.py`，但对正常使用来说不是必需步骤。
 
 ### 在目标项目中如何触发
 
 1. 用 Codex 打开目标项目根目录
 2. 确认当前工作目录就是目标项目，而不是技能仓库
-3. 如果还没准备 `doc/`，先运行准备脚本
-4. 显式输入：
+3. 显式输入：
 
 ```text
 请执行 $bingo-spec-coding-max-skill，对当前项目先 dry-run，确认后再 apply。
@@ -327,12 +285,13 @@ powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\sc
 Codex 应该按以下方式工作：
 
 - 读取 `$CODEX_HOME/skills/bingo-spec-coding-max-skill/SKILL.md`
+- 先自动执行 `sync_skill_docs.py`，刷新当前项目 `doc/`
 - 使用当前项目的 `doc/` 作为输入
 - 在当前项目内生成 `AGENTS.md`、`spec/` 和 `.spec-bootstrap.lock`
 
 ### 推荐的执行命令
 
-如果 Codex 需要在终端中显式执行脚本，建议使用技能目录下的脚本，但把 `project-root` 指向当前项目。
+如果 Codex 需要在终端中显式执行脚本，建议使用技能目录下的脚本，但把 `project-root` 指向当前项目。等价执行顺序如下：
 
 macOS / Linux:
 
@@ -364,10 +323,12 @@ powershell -ExecutionPolicy Bypass -File $env:CODEX_HOME\skills\bingo-spec-codin
 powershell -ExecutionPolicy Bypass -File $env:CODEX_HOME\skills\bingo-spec-coding-max-skill\scripts\init_spec_repo.ps1 --project-root . --apply -Upgrade -Language zh
 ```
 
+如果刚升级过 skill，或目标项目已经初始化过，重新手动触发 `$bingo-spec-coding-max-skill` 即可。skill 会先刷新 `doc/`，然后再走新的初始化预览。
+
 ### 接入约束
 
 - 技能目录负责提供能力，不负责保存业务项目输出
-- 目标项目必须自行维护 `doc/` 输入内容
+- skill 会先自动刷新目标项目 `doc/` 输入内容
 - 首次使用必须先 `dry-run`
 - 只有在用户确认后才应执行 `apply`
 - 已有 `.spec-bootstrap.lock` 时，除非明确要求，否则不应重复初始化
@@ -381,11 +342,9 @@ macOS / Linux:
 ```bash
 export CODEX_HOME="$HOME/.codex"
 
-bash ./skills/bingo-spec-coding-max-skill/scripts/setup_codex_skill_for_project.sh --target-project /path/to/existing-project
+bash ./skills/bingo-spec-coding-max-skill/scripts/install_codex_skill.sh
 
 cd /path/to/existing-project
-
-bash "$CODEX_HOME/skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh" --project-root . --dry-run
 ```
 
 进入 Codex 后可直接输入：
@@ -399,16 +358,14 @@ Windows:
 ```powershell
 $env:CODEX_HOME = "$HOME\.codex"
 
-powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\scripts\setup_codex_skill_for_project.ps1 -TargetProject C:\path\to\existing-project
+powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\scripts\install_codex_skill.ps1
 
 Set-Location C:\path\to\existing-project
-
-powershell -ExecutionPolicy Bypass -File $env:CODEX_HOME\skills\bingo-spec-coding-max-skill\scripts\init_spec_repo.ps1 --project-root . --dry-run
 ```
 
 预期结果：
 
-- 目标项目生成 `doc/` 输入模板
+- skill 会自动刷新目标项目 `doc/` 输入模板
 - Codex 可识别 `$bingo-spec-coding-max-skill`
 - dry-run 会预览 `AGENTS.md`、`spec/`、模板与 prompts
 - 确认后可继续执行 `apply`
@@ -485,7 +442,15 @@ bash ./skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh --apply
 │   ├── SPEC_WORKFLOW.md
 │   ├── CHANGE_POLICY.md
 │   ├── features
-│   │   └── .gitkeep
+│   │   ├── .gitkeep
+│   │   └── auth-login
+│   │       ├── plan.md
+│   │       ├── spec.md
+│   │       ├── tasks.md
+│   │       ├── smallchange
+│   │       │   └── 2026-03-09-trim-password-input.md
+│   │       └── hotfix
+│   │           └── 2026-03-09-jwt-validation-patch.md
 │   ├── prompts
 │   │   ├── spec_bootstrap_prompt_v6.md
 │   │   ├── change_classifier.prompt.md
@@ -508,6 +473,9 @@ bash ./skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh --apply
 - `spec/templates/CHANGE_TEMPLATE.md` 用于 `L2`
 - `spec/templates/HOTFIX_TEMPLATE.md` 用于 `L3`
 - `spec/features/` 是后续 feature 规格和 change 历史的根目录
+- `L1` 文档固定保存在 `spec/features/<feature-name>/`
+- `L2` 历史固定保存在 `spec/features/<feature-name>/smallchange/`
+- `L3` 历史固定保存在 `spec/features/<feature-name>/hotfix/`
 
 ## 使用示例
 
@@ -525,5 +493,5 @@ bash ./skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh --apply
 
 详细示例见：
 
-- `doc/usage_examples.md`
+- `skills/bingo-spec-coding-max-skill/resources/doc/usage_examples.md`
 - `spec/usage/usage_examples.md`，初始化后生成

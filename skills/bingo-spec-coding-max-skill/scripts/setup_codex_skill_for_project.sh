@@ -52,6 +52,25 @@ if [[ -d "$TARGET_DOC_DIR" ]] && find "$TARGET_DOC_DIR" -type f -print -quit | g
   DOC_FILES_EXIST="true"
 fi
 
+clear_target_project_refresh_state() {
+  if [[ -d "$TARGET_DOC_DIR" ]]; then
+    rm -rf "$TARGET_DOC_DIR"
+    echo "[REMOVE] Existing doc inputs cleared: $TARGET_DOC_DIR"
+  fi
+  if [[ -d "$TARGET_PROJECT_DIR/spec" ]]; then
+    rm -rf "$TARGET_PROJECT_DIR/spec"
+    echo "[REMOVE] Existing spec directory cleared: $TARGET_PROJECT_DIR/spec"
+  fi
+  if [[ -f "$TARGET_PROJECT_DIR/AGENTS.md" ]]; then
+    rm -f "$TARGET_PROJECT_DIR/AGENTS.md"
+    echo "[REMOVE] Existing AGENTS.md cleared: $TARGET_PROJECT_DIR/AGENTS.md"
+  fi
+  if [[ -f "$TARGET_PROJECT_DIR/.spec-bootstrap.lock" ]]; then
+    rm -f "$TARGET_PROJECT_DIR/.spec-bootstrap.lock"
+    echo "[REMOVE] Existing bootstrap lock cleared: $TARGET_PROJECT_DIR/.spec-bootstrap.lock"
+  fi
+}
+
 INSTALL_ARGS=(--mode "$MODE" --codex-home "$CODEX_HOME_VALUE")
 PREPARE_ARGS=(--target-project "$TARGET_PROJECT")
 
@@ -68,7 +87,13 @@ if [[ -e "$SKILL_TARGET_DIR" && "$FORCE" != "true" && "$UPGRADE_SKILL" != "true"
 else
   bash "$SCRIPT_DIR/install_codex_skill.sh" "${INSTALL_ARGS[@]}"
 fi
-if [[ "$FORCE" != "true" && "$DOC_FILES_EXIST" == "true" ]]; then
+
+if [[ "$UPGRADE_SKILL" == "true" ]]; then
+  clear_target_project_refresh_state
+  bash "$SCRIPT_DIR/prepare_target_project.sh" "${PREPARE_ARGS[@]}" --clean
+  echo "[INFO] Skill upgrade forces a full target-project refresh."
+  echo "[INFO] Re-run \$bingo-spec-coding-max-skill in the target project to regenerate the full spec system."
+elif [[ "$FORCE" != "true" && "$DOC_FILES_EXIST" == "true" ]]; then
   echo "[SKIP ] Existing doc inputs preserved: $TARGET_DOC_DIR"
 else
   bash "$SCRIPT_DIR/prepare_target_project.sh" "${PREPARE_ARGS[@]}"

@@ -23,6 +23,12 @@ Optional but recommended:
 - stay aligned with the related feature spec
 - if no baseline feature spec exists, do not continue as `L2`; escalate to `L1 + FULL_SPEC`
 
+## Path Rules
+
+- save the output to `spec/features/<feature-name>/smallchange/<date>-<change-name>.md`
+- only write under the related feature folder's `smallchange/`
+- do not place change records directly under the `spec/` root
+
 ## Required Output Structure
 
 Return exactly this structure:
@@ -37,7 +43,7 @@ Final Level: L2
 Change Type: SMALL_CHANGE | BUG_FIX
 Doc Mode: CHANGE_RECORD
 Workflow: Tasks -> Code
-Human Gate: Confirm after Tasks
+Human Gate: Confirm after `spec/features/<feature-name>/smallchange/<date>-<change-name>.md`
 
 ## Context
 

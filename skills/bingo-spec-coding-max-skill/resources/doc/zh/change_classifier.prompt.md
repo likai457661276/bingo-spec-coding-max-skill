@@ -213,6 +213,7 @@ Escalation Note:
 - `L2` 必须依附已有 feature spec
 - 若无 feature spec，则升级为 `L1 + FULL_SPEC`
 - `L3` 在服务恢复后，仍需补回规格历史
+- 所有需求文档都必须写入 `spec/features/<feature-name>/`，禁止直接写到 `spec/` 根目录
 
 ## Human Gate 规则
 
@@ -222,9 +223,10 @@ Escalation Note:
 
 补充强制要求：
 
-- `L1` 必须先生成并保存 `plan.md`、`spec.md`、`tasks.md`
-- `L2` 必须先生成并保存 `change.md` 或等价变更记录 `.md`
-- `L3` 必须先生成并保存 `hotfix.md` 或等价补丁方案 `.md`
+- `L1` 必须先创建 `spec/features/<feature-name>/`，并保存 `plan.md`、`spec.md`、`tasks.md`
+- `L2` 必须先在 `spec/features/<feature-name>/smallchange/` 下生成并保存 `<date>-<change-name>.md`
+- `L3` 必须先在 `spec/features/<feature-name>/hotfix/` 下生成并保存 `<date>-<hotfix-name>.md`
+- 创建 feature 目录时，同步建立 `smallchange/` 与 `hotfix/` 子目录
 - 所有级别都必须等待用户确认，并由用户手动明确继续后，才能进入编码或执行推进实现的命令
 
 ## Reason 要求

@@ -1,13 +1,24 @@
 param(
     [string]$TargetProject = ".",
-    [switch]$Force
+    [switch]$Force,
+    [switch]$Clean
 )
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$repoRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $scriptDir))
-$sourceDocDir = Join-Path $repoRoot "doc"
+$skillDir = Split-Path -Parent $scriptDir
+$sourceDocDir = Join-Path (Join-Path $skillDir "resources") "doc"
 $targetProjectDir = (Resolve-Path $TargetProject).Path
 $targetDocDir = Join-Path $targetProjectDir "doc"
+
+if (-not (Test-Path $sourceDocDir)) {
+    Write-Error "Bundled doc templates not found: $sourceDocDir"
+    exit 1
+}
+
+if ($Clean -and (Test-Path $targetDocDir)) {
+    Remove-Item -Recurse -Force $targetDocDir
+    Write-Output "[REMOVE] Existing doc inputs cleared: $targetDocDir"
+}
 
 New-Item -ItemType Directory -Force -Path $targetDocDir | Out-Null
 

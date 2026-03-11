@@ -20,6 +20,14 @@ Scope Signals: New login page; New authentication API; New JWT issuance flow; Ca
 Escalation Note: None
 ```
 
+Suggested paths:
+
+- `spec/features/auth-login/plan.md`
+- `spec/features/auth-login/spec.md`
+- `spec/features/auth-login/tasks.md`
+- `spec/features/auth-login/smallchange/`
+- `spec/features/auth-login/hotfix/`
+
 ## Example 2 - Password Validation Bug
 
 Request:
@@ -40,6 +48,10 @@ Scope Signals: Existing login capability; Existing feature spec can be reused; O
 Escalation Note: Escalate to L1 if the fix expands into authentication-flow redesign, field semantic changes, or caller-visible interface behavior changes
 ```
 
+Suggested path:
+
+- `spec/features/auth-login/smallchange/2026-03-09-trim-password-input.md`
+
 ## Example 3 - Production Token Failure
 
 Request:
@@ -59,3 +71,7 @@ Reason: This is a production incident fix whose current goal is rapid restoratio
 Scope Signals: Broad production failure; Rapid mitigation goal; Patch limited to JWT validation entrypoint; No new interface introduced
 Escalation Note: Escalate to L2 or L1 if the patch grows into auth-chain redesign, interface changes, or a broad refactor
 ```
+
+Suggested path:
+
+- `spec/features/auth-login/hotfix/2026-03-09-jwt-validation-patch.md`

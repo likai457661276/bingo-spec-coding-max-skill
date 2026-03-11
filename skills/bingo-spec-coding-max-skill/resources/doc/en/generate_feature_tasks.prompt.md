@@ -4,11 +4,17 @@ Generate `tasks.md` for an `L1` feature change.
 
 ## Required Inputs
 
-- `plan.md`
-- `spec.md`
+- `spec/features/<feature-name>/plan.md`
+- `spec/features/<feature-name>/spec.md`
 - confirmed classification output where `Final Level = L1`
 
 Do not generate tasks until these inputs are available.
+
+## Path Rules
+
+- save the output to `spec/features/<feature-name>/tasks.md`
+- when the feature folder is created, also create `spec/features/<feature-name>/smallchange/` and `spec/features/<feature-name>/hotfix/`
+- do not write requirement documents directly under the `spec/` root
 
 ## Task Generation Rules
 
@@ -39,8 +45,8 @@ Summarize the feature goal, affected area, and implementation assumptions.
 
 ## Preconditions
 
-- Confirm `plan.md` approved
-- Confirm `spec.md` approved
+- Confirm `spec/features/<feature-name>/plan.md` approved
+- Confirm `spec/features/<feature-name>/spec.md` approved
 
 ## Tasks
 

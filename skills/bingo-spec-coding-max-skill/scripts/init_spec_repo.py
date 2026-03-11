@@ -164,6 +164,13 @@ Agent 应从本文件进入规格树，再定位到 `spec/features/<feature-name
 1. [usage_examples.md](./usage/usage_examples.md)
 2. 特性目录：`spec/features/<feature-name>/`
 
+## 特性目录约定
+
+1. `L1` 主文档保存在 `spec/features/<feature-name>/plan.md`、`spec/features/<feature-name>/spec.md`、`spec/features/<feature-name>/tasks.md`
+2. `L2` 变更记录保存在 `spec/features/<feature-name>/smallchange/<date>-<change-name>.md`
+3. `L3` 热修复记录保存在 `spec/features/<feature-name>/hotfix/<date>-<hotfix-name>.md`
+4. 创建 feature 目录时，同步建立 `smallchange/` 与 `hotfix/` 子目录
+
 ## 导航规则
 
 1. 先阅读本索引。
@@ -219,21 +226,21 @@ Context -> Plan -> Spec -> Tasks -> Code
 - Workflow: `Context -> Plan -> Spec -> Tasks -> Code`
 - Doc Mode: `FULL_SPEC`
 - 适用：新增能力、外部契约变更、跨模块设计变化、没有既有 spec 的行为变更
-- 强制门禁：必须先生成 `plan.md`、`spec.md`、`tasks.md` 并等待用户确认，之后仅在用户手动明确继续时进入编码
+- 强制门禁：必须先创建 `spec/features/<feature-name>/`，并在其中生成 `plan.md`、`spec.md`、`tasks.md`；同时建立 `smallchange/` 与 `hotfix/` 子目录，等待用户确认后才可进入编码
 
 ### L2 Small Change
 
 - Workflow: `Tasks -> Code`
 - Doc Mode: `CHANGE_RECORD`
 - 前提：必须已有相关 feature spec；若无 spec，不得直接走 L2
-- 强制门禁：必须先生成实体 `change.md` 或等价变更 `.md` 文档并等待用户确认，之后仅在用户手动明确继续时进入编码
+- 强制门禁：必须先在 `spec/features/<feature-name>/smallchange/` 下生成实体 `<date>-<change-name>.md` 变更记录并等待用户确认，之后仅在用户手动明确继续时进入编码
 
 ### L3 Hotfix
 
 - Workflow: `Patch Proposal -> Code`
 - Doc Mode: `HOTFIX_RECORD`
 - 前提：目标是尽快恢复服务，且补丁范围必须保持最小安全补丁
-- 强制门禁：必须先生成实体 `hotfix.md` 或等价补丁方案 `.md` 文档并等待用户确认，之后仅在用户手动明确继续时进入编码
+- 强制门禁：必须先在 `spec/features/<feature-name>/hotfix/` 下生成实体 `<date>-<hotfix-name>.md` 补丁方案并等待用户确认，之后仅在用户手动明确继续时进入编码
 
 ## 强制升级规则
 
@@ -250,9 +257,9 @@ Context -> Plan -> Spec -> Tasks -> Code
 
 ## 文档先行规则
 
-- `L1`: 先落地 `plan.md`、`spec.md`、`tasks.md`
-- `L2`: 先落地 `change.md` 或等价变更记录 `.md`
-- `L3`: 先落地 `hotfix.md` 或等价补丁方案 `.md`
+- `L1`: 先创建 `spec/features/<feature-name>/`，再落地 `plan.md`、`spec.md`、`tasks.md`
+- `L2`: 先确认相关 feature 目录存在，再落地 `spec/features/<feature-name>/smallchange/<date>-<change-name>.md`
+- `L3`: 先确认相关 feature 目录存在，再落地 `spec/features/<feature-name>/hotfix/<date>-<hotfix-name>.md`
 - 所有级别都必须在文档落地并获得用户确认后，由用户手动明确继续，才可进入代码实现或执行推进实现的命令
 
 ## Prompt 路由
@@ -284,13 +291,13 @@ Context -> Plan -> Spec -> Tasks -> Code
 
 1. 必须已有可复用的 feature `spec.md` 或基础规格记录。
 2. 若无既有 spec，不得直接走 `L2`，必须升级为 `L1 + FULL_SPEC`。
-3. 文档沉淀使用 `CHANGE_RECORD`，写入相关 feature 历史。
+3. 文档沉淀使用 `CHANGE_RECORD`，写入 `spec/features/<feature-name>/smallchange/` 下的历史记录。
 
 ## L3 约束
 
 1. 仅用于生产故障、安全问题、线上关键失败的最小安全补丁。
 2. 若修复涉及跨模块重设计、新接口、新流程、大范围重构或完整新逻辑验证，必须升级为 `L2` 或 `L1`。
-3. 稳定后必须补回规格历史，文档模式为 `HOTFIX_RECORD`。
+3. 稳定后必须补回规格历史，文档模式为 `HOTFIX_RECORD`，记录位于 `spec/features/<feature-name>/hotfix/`。
 
 ## 覆盖规则
 
@@ -299,9 +306,9 @@ Context -> Plan -> Spec -> Tasks -> Code
 
 ## 文档执行门禁
 
-1. `L1` 必须先生成并保存 `plan.md`、`spec.md`、`tasks.md`。
-2. `L2` 必须先生成并保存实体 `change.md` 或等价变更记录 `.md`。
-3. `L3` 必须先生成并保存实体 `hotfix.md` 或等价补丁方案 `.md`。
+1. `L1` 必须先创建 `spec/features/<feature-name>/`，并在其中保存 `plan.md`、`spec.md`、`tasks.md`。
+2. `L2` 必须先在 `spec/features/<feature-name>/smallchange/` 下生成并保存实体 `<date>-<change-name>.md`。
+3. `L3` 必须先在 `spec/features/<feature-name>/hotfix/` 下生成并保存实体 `<date>-<hotfix-name>.md`。
 4. 上述文档未落地前，不得编码，也不得执行会推进实现的命令。
 5. 文档落地后，仍必须等待用户确认，并由用户手动明确继续。
 """,
@@ -309,7 +316,8 @@ Context -> Plan -> Spec -> Tasks -> Code
 
 ## Manual Execution Gate
 
-- 本文档是实体门禁文档之一，必须先保存为 `plan.md`
+- 本文档是实体门禁文档之一，必须先保存为 `spec/features/<feature-name>/plan.md`
+- 创建 feature 目录时，同时建立 `spec/features/<feature-name>/smallchange/` 与 `spec/features/<feature-name>/hotfix/`
 - 用户确认并手动明确继续前，不得进入编码或执行推进实现的命令
 
 ## 问题陈述
@@ -343,7 +351,7 @@ Out of scope:
 
 ## Manual Execution Gate
 
-- 本文档是实体门禁文档之一，必须先保存为 `spec.md`
+- 本文档是实体门禁文档之一，必须先保存为 `spec/features/<feature-name>/spec.md`
 - 用户确认并手动明确继续前，不得进入编码或执行推进实现的命令
 
 ## 背景
@@ -380,7 +388,7 @@ Doc Mode: FULL_SPEC
 
 ## Manual Execution Gate
 
-- 本文档是实体门禁文档之一，必须先保存为 `tasks.md`
+- 本文档是实体门禁文档之一，必须先保存为 `spec/features/<feature-name>/tasks.md`
 - 用户确认并手动明确继续前，不得进入编码或执行推进实现的命令
 
 ## 背景
@@ -408,13 +416,13 @@ Final Level: L2
 Change Type: SMALL_CHANGE | BUG_FIX
 Doc Mode: CHANGE_RECORD
 Workflow: Tasks -> Code
-Human Gate: 先生成并保存 `change.md`，待用户确认并手动明确继续后才能进入代码实现
+Human Gate: 先生成并保存 `spec/features/<feature-name>/smallchange/<date>-<change-name>.md`，待用户确认并手动明确继续后才能进入代码实现
 
 ## Preconditions
 
 - 相关 feature `spec.md` 已存在并已阅读
 - 若不存在既有 feature spec，升级为 `L1 + FULL_SPEC`
-- 必须先将本方案保存为实体 `change.md` 或等价变更记录 `.md`
+- 必须先确保 `spec/features/<feature-name>/smallchange/` 存在，并将本方案保存为实体 `<date>-<change-name>.md`
 - 用户确认并手动明确继续前，不得进入编码或执行推进实现的命令
 
 ## 背景
@@ -454,14 +462,14 @@ Final Level: L3
 Change Type: BUG_FIX
 Doc Mode: HOTFIX_RECORD
 Workflow: Patch Proposal -> Code
-Human Gate: 先生成并保存 `hotfix.md`，待用户确认并手动明确继续后才能进入代码实现
+Human Gate: 先生成并保存 `spec/features/<feature-name>/hotfix/<date>-<hotfix-name>.md`，待用户确认并手动明确继续后才能进入代码实现
 
 ## Preconditions
 
 - 当前目标是尽快恢复服务
 - 补丁范围保持为最小安全补丁
 - 若范围扩大，升级为 `L2` 或 `L1`
-- 必须先将本方案保存为实体 `hotfix.md` 或等价补丁方案 `.md`
+- 必须先确保 `spec/features/<feature-name>/hotfix/` 存在，并将本方案保存为实体 `<date>-<hotfix-name>.md`
 - 用户确认并手动明确继续前，不得进入编码或执行推进实现的命令
 
 ## 事故背景
@@ -585,6 +593,13 @@ Agents should enter the spec tree from this file, then locate the relevant featu
 1. [usage_examples.md](./usage/usage_examples.md)
 2. Features path: `spec/features/<feature-name>/`
 
+## Feature Layout
+
+1. `L1` primary docs live in `spec/features/<feature-name>/plan.md`, `spec/features/<feature-name>/spec.md`, and `spec/features/<feature-name>/tasks.md`
+2. `L2` change records live in `spec/features/<feature-name>/smallchange/<date>-<change-name>.md`
+3. `L3` hotfix records live in `spec/features/<feature-name>/hotfix/<date>-<hotfix-name>.md`
+4. When a feature folder is created, create `smallchange/` and `hotfix/` under it as well
+
 ## Navigation
 
 1. Read this index first.
@@ -640,21 +655,21 @@ Context -> Plan -> Spec -> Tasks -> Code
 - Workflow: `Context -> Plan -> Spec -> Tasks -> Code`
 - Doc Mode: `FULL_SPEC`
 - Use for: new capabilities, external contract changes, cross-module design work, or behavior changes without a reusable existing spec
-- Hard gate: generate `plan.md`, `spec.md`, and `tasks.md` first; wait for user review, and continue to code only after a manual go-ahead
+- Hard gate: create `spec/features/<feature-name>/` first, then generate `plan.md`, `spec.md`, and `tasks.md` there; also create `smallchange/` and `hotfix/` before coding
 
 ### L2 Small Change
 
 - Workflow: `Tasks -> Code`
 - Doc Mode: `CHANGE_RECORD`
 - Requirement: an existing related feature spec must already exist; otherwise escalate to `L1`
-- Hard gate: generate a concrete `change.md` or equivalent change record `.md` first; wait for user review, and continue to code only after a manual go-ahead
+- Hard gate: generate a concrete change record at `spec/features/<feature-name>/smallchange/<date>-<change-name>.md` first; wait for user review, and continue to code only after a manual go-ahead
 
 ### L3 Hotfix
 
 - Workflow: `Patch Proposal -> Code`
 - Doc Mode: `HOTFIX_RECORD`
 - Requirement: the goal is rapid restoration and the patch must stay minimal
-- Hard gate: generate a concrete `hotfix.md` or equivalent patch proposal `.md` first; wait for user review, and continue to code only after a manual go-ahead
+- Hard gate: generate a concrete hotfix record at `spec/features/<feature-name>/hotfix/<date>-<hotfix-name>.md` first; wait for user review, and continue to code only after a manual go-ahead
 
 ## Hard Escalation Rules
 
@@ -671,9 +686,9 @@ Context -> Plan -> Spec -> Tasks -> Code
 
 ## Document-First Rule
 
-- `L1`: create `plan.md`, `spec.md`, and `tasks.md` first
-- `L2`: create `change.md` or an equivalent change-record `.md` first
-- `L3`: create `hotfix.md` or an equivalent patch-proposal `.md` first
+- `L1`: create `spec/features/<feature-name>/` first, then save `plan.md`, `spec.md`, and `tasks.md` there
+- `L2`: confirm the feature folder exists, then save `spec/features/<feature-name>/smallchange/<date>-<change-name>.md`
+- `L3`: confirm the feature folder exists, then save `spec/features/<feature-name>/hotfix/<date>-<hotfix-name>.md`
 - For every level, code work and implementation-driving commands must wait until the document exists, the user reviews it, and the user manually tells the agent to continue
 
 ## Prompt Routing
@@ -705,13 +720,13 @@ Any of the following must be classified as `L1 + FULL_SPEC`:
 
 1. A reusable feature `spec.md` or equivalent baseline spec must already exist.
 2. If no baseline spec exists, do not use `L2`; escalate to `L1 + FULL_SPEC`.
-3. Documentation uses `CHANGE_RECORD` under the related feature history.
+3. Documentation uses `CHANGE_RECORD` under `spec/features/<feature-name>/smallchange/`.
 
 ## L3 Constraints
 
 1. Only use `L3` for the smallest safe patch to a production incident, security issue, or critical runtime failure.
 2. If the fix requires cross-module redesign, a new interface, a new flow, a broad refactor, or full validation of new logic, escalate to `L2` or `L1`.
-3. After stabilization, backfill the spec history with `HOTFIX_RECORD`.
+3. After stabilization, backfill the spec history with `HOTFIX_RECORD` under `spec/features/<feature-name>/hotfix/`.
 
 ## Override Rule
 
@@ -720,9 +735,9 @@ Any of the following must be classified as `L1 + FULL_SPEC`:
 
 ## Document Execution Gate
 
-1. `L1` must first generate and save `plan.md`, `spec.md`, and `tasks.md`.
-2. `L2` must first generate and save a concrete `change.md` or equivalent change-record `.md`.
-3. `L3` must first generate and save a concrete `hotfix.md` or equivalent patch-proposal `.md`.
+1. `L1` must first create `spec/features/<feature-name>/`, then save `plan.md`, `spec.md`, and `tasks.md` inside it.
+2. `L2` must first generate and save a concrete `<date>-<change-name>.md` under `spec/features/<feature-name>/smallchange/`.
+3. `L3` must first generate and save a concrete `<date>-<hotfix-name>.md` under `spec/features/<feature-name>/hotfix/`.
 4. Before those documents exist, do not code and do not run implementation-driving commands.
 5. After the documents exist, still wait for user confirmation and a manual go-ahead.
 """,
@@ -730,7 +745,8 @@ Any of the following must be classified as `L1 + FULL_SPEC`:
 
 ## Manual Execution Gate
 
-- This is one of the concrete gate documents and must first be saved as `plan.md`
+- This is one of the concrete gate documents and must first be saved as `spec/features/<feature-name>/plan.md`
+- When the feature folder is created, also create `spec/features/<feature-name>/smallchange/` and `spec/features/<feature-name>/hotfix/`
 - Do not start coding or run implementation-driving commands before user confirmation and a manual go-ahead
 
 ## Problem Statement
@@ -764,7 +780,7 @@ Out of scope:
 
 ## Manual Execution Gate
 
-- This is one of the concrete gate documents and must first be saved as `spec.md`
+- This is one of the concrete gate documents and must first be saved as `spec/features/<feature-name>/spec.md`
 - Do not start coding or run implementation-driving commands before user confirmation and a manual go-ahead
 
 ## Background
@@ -801,7 +817,7 @@ Doc Mode: FULL_SPEC
 
 ## Manual Execution Gate
 
-- This is one of the concrete gate documents and must first be saved as `tasks.md`
+- This is one of the concrete gate documents and must first be saved as `spec/features/<feature-name>/tasks.md`
 - Do not start coding or run implementation-driving commands before user confirmation and a manual go-ahead
 
 ## Context
@@ -829,13 +845,13 @@ Final Level: L2
 Change Type: SMALL_CHANGE | BUG_FIX
 Doc Mode: CHANGE_RECORD
 Workflow: Tasks -> Code
-Human Gate: Save `change.md` first, then wait for user confirmation and a manual go-ahead before coding
+Human Gate: Save `spec/features/<feature-name>/smallchange/<date>-<change-name>.md` first, then wait for user confirmation and a manual go-ahead before coding
 
 ## Preconditions
 
 - Related feature `spec.md` exists and has been read
 - If no existing feature spec exists, escalate to `L1 + FULL_SPEC`
-- This plan must first be saved as a concrete `change.md` or equivalent change-record `.md`
+- Ensure `spec/features/<feature-name>/smallchange/` exists, then save this plan as a concrete `<date>-<change-name>.md`
 - Do not start coding or run implementation-driving commands before user confirmation and a manual go-ahead
 
 ## Context
@@ -875,14 +891,14 @@ Final Level: L3
 Change Type: BUG_FIX
 Doc Mode: HOTFIX_RECORD
 Workflow: Patch Proposal -> Code
-Human Gate: Save `hotfix.md` first, then wait for user confirmation and a manual go-ahead before coding
+Human Gate: Save `spec/features/<feature-name>/hotfix/<date>-<hotfix-name>.md` first, then wait for user confirmation and a manual go-ahead before coding
 
 ## Preconditions
 
 - The goal is rapid service restoration
 - The patch remains the smallest safe patch
 - If scope expands, escalate to `L2` or `L1`
-- This proposal must first be saved as a concrete `hotfix.md` or equivalent patch-proposal `.md`
+- Ensure `spec/features/<feature-name>/hotfix/` exists, then save this proposal as a concrete `<date>-<hotfix-name>.md`
 - Do not start coding or run implementation-driving commands before user confirmation and a manual go-ahead
 
 ## Incident Context

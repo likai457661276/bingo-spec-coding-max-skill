@@ -4,11 +4,17 @@
 
 ## Required Inputs
 
-- `plan.md`
-- `spec.md`
+- `spec/features/<feature-name>/plan.md`
+- `spec/features/<feature-name>/spec.md`
 - 已确认的分级输出，其中 `Final Level = L1`
 
 在上述输入齐备前，不得生成任务。
+
+## Path Rules
+
+- 输出内容保存到 `spec/features/<feature-name>/tasks.md`
+- 创建 feature 目录时，同步建立 `spec/features/<feature-name>/smallchange/` 与 `spec/features/<feature-name>/hotfix/`
+- 不得把需求文档直接写到 `spec/` 根目录
 
 ## Task Generation Rules
 
@@ -39,8 +45,8 @@ Doc Mode: FULL_SPEC
 
 ## Preconditions
 
-- Confirm `plan.md` approved
-- Confirm `spec.md` approved
+- Confirm `spec/features/<feature-name>/plan.md` approved
+- Confirm `spec/features/<feature-name>/spec.md` approved
 
 ## Tasks
 

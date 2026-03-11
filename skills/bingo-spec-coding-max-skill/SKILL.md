@@ -16,6 +16,7 @@ description: 初始化专用技能。仅在用户显式输入 `$bingo-spec-codin
 5. 对已初始化项目做规范重建时，优先使用 `--upgrade`，它等价于 `--reinit --force`。
 6. 初始化时会自动生成仓库级 `SPEC_CONTEXT` 初稿，支持 Java / Frontend / Python / 混合仓库；不确定信息保留为“待确认”。
 7. 注入的分级规则采用三轴输出：`Requested Level / Final Level / Change Type / Doc Mode`，并内置外部契约强制 `L1`、无既有 spec 禁止直接 `L2`、`L3` 仅限最小安全补丁等规则。
+8. 在目标项目内手动触发 skill 时，先自动执行 Python 同步脚本刷新当前项目的 `doc/`；若当前项目已有 `doc/`，先清空后重拷贝，再进入 `dry-run` 初始化。
 
 dry-run 预览应覆盖：
 
@@ -28,6 +29,13 @@ dry-run 预览应覆盖：
 - `spec/templates/HOTFIX_TEMPLATE.md`
 - `spec/prompts/*`
 - `spec/features/`
+
+初始化后的需求文档约定：
+
+- `L1` 文档写入 `spec/features/<feature-name>/`
+- `L2` 文档写入 `spec/features/<feature-name>/smallchange/`
+- `L3` 文档写入 `spec/features/<feature-name>/hotfix/`
+- 创建 feature 目录时，同时建立 `smallchange/` 与 `hotfix/`
 
 ## 运行入口
 
@@ -47,7 +55,9 @@ bash ./skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh --apply --la
 
 ## 输入来源
 
-默认从项目根目录 `doc/<language>/` 读取以下文件并注入：
+skill 内置模板位于 `skills/bingo-spec-coding-max-skill/resources/doc/`。
+
+手动触发时，先把内置模板同步到项目根目录 `doc/<language>/`，再从当前项目的 `doc/` 读取以下文件并注入：
 
 1. `spec_bootstrap_prompt_v6.md`（初始化流程提示词）
 2. `change_classifier.prompt.md`
@@ -78,6 +88,14 @@ Windows:
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\scripts\setup_codex_skill_for_project.ps1 -TargetProject C:\path\to\your-project
 ```
+
+如果对已接入项目执行升级刷新：
+
+- 传 `--upgrade-skill` 或 `-UpgradeSkill`
+- 会先删除目标项目原有 `doc/`
+- 会清除目标项目现有 `spec/`、`AGENTS.md`、`.spec-bootstrap.lock`
+- 然后重新复制最新 `doc/`
+- 最后要求在目标项目内重新执行初始化，重新生成整套 spec 体系
 
 如果只想单独安装 skill，再使用下面的安装脚本。
 
@@ -118,24 +136,11 @@ powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\sc
 目标项目要求：
 
 1. 当前工作目录是目标项目根目录
-2. 目标项目存在 `doc/` 输入目录
-3. 默认先执行 dry-run
-4. 用户确认后再执行 apply
-5. 若未显式指定，初始化语言默认为中文
-
-如果目标项目还没有 `doc/` 输入目录，先使用准备脚本：
-
-macOS / Linux:
-
-```bash
-bash ./skills/bingo-spec-coding-max-skill/scripts/prepare_target_project.sh --target-project /path/to/your-project
-```
-
-Windows:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\scripts\prepare_target_project.ps1 -TargetProject C:\path\to\your-project
-```
+2. 直接手动触发 `$bingo-spec-coding-max-skill`
+3. skill 会先自动刷新当前项目的 `doc/`
+4. 默认先执行 dry-run
+5. 用户确认后再执行 apply
+6. 若未显式指定，初始化语言默认为中文
 
 macOS / Linux:
 

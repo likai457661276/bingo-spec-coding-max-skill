@@ -23,6 +23,12 @@
 - 与相关 feature spec 保持一致
 - 若不存在既有 feature spec，不得继续按 `L2` 生成任务，必须升级为 `L1 + FULL_SPEC`
 
+## Path Rules
+
+- 输出内容保存到 `spec/features/<feature-name>/smallchange/<date>-<change-name>.md`
+- 仅可写入相关 feature 目录下的 `smallchange/`
+- 不得把变更记录直接写到 `spec/` 根目录
+
 ## Required Output Structure
 
 严格按以下结构返回：
@@ -37,7 +43,7 @@ Final Level: L2
 Change Type: SMALL_CHANGE | BUG_FIX
 Doc Mode: CHANGE_RECORD
 Workflow: Tasks -> Code
-Human Gate: Confirm after Tasks
+Human Gate: Confirm after `spec/features/<feature-name>/smallchange/<date>-<change-name>.md`
 
 ## Context
 

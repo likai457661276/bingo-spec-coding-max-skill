@@ -27,7 +27,7 @@ Always respond in Chinese-simplified.
 ## 仓库结构
 
 - `README.md` / `README_CN.md`：对外说明，分别维护英文与中文文档
-- `doc/`：初始化注入源，包含通用文件以及 `doc/zh/`、`doc/en/` 本地化内容
+- `skills/bingo-spec-coding-max-skill/resources/doc/`：skill 内置初始化注入源，包含通用文件以及 `zh/`、`en/` 本地化内容
 - `skills/bingo-spec-coding-max-skill/SKILL.md`：技能定义与触发约束
 - `skills/bingo-spec-coding-max-skill/agents/openai.yaml`：代理入口配置
 - `skills/bingo-spec-coding-max-skill/scripts/`：初始化、安装、准备项目等脚本
@@ -82,7 +82,7 @@ Always respond in Chinese-simplified.
 本仓库同时维护中文与英文内容。修改用户可见说明时：
 
 - 优先同步 `README_CN.md` 与 `README.md`
-- 优先同步 `doc/zh/` 与 `doc/en/` 中语义对应的文件
+- 优先同步 `skills/bingo-spec-coding-max-skill/resources/doc/zh/` 与 `skills/bingo-spec-coding-max-skill/resources/doc/en/` 中语义对应的文件
 - 如果暂时只更新单语版本，必须明确说明差异是暂时的还是有意保留
 
 ### 非源码目录

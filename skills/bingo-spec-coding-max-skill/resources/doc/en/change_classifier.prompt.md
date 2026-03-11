@@ -213,6 +213,7 @@ Additional requirements:
 - `L2` must attach to an existing feature spec
 - if no feature spec exists, escalate to `L1 + FULL_SPEC`
 - after service recovery, `L3` still needs spec history backfill
+- all requirement documents must be written under `spec/features/<feature-name>/`, never directly under the `spec/` root
 
 ## Human Gate Rules
 
@@ -222,9 +223,10 @@ Additional requirements:
 
 Additional hard requirement:
 
-- `L1` must first generate and save `plan.md`, `spec.md`, and `tasks.md`
-- `L2` must first generate and save `change.md` or an equivalent change-record `.md`
-- `L3` must first generate and save `hotfix.md` or an equivalent patch-proposal `.md`
+- `L1` must first create `spec/features/<feature-name>/`, then save `plan.md`, `spec.md`, and `tasks.md`
+- `L2` must first generate and save `<date>-<change-name>.md` under `spec/features/<feature-name>/smallchange/`
+- `L3` must first generate and save `<date>-<hotfix-name>.md` under `spec/features/<feature-name>/hotfix/`
+- when a feature folder is created, create `smallchange/` and `hotfix/` under it too
 - for every level, wait for user confirmation and a manual go-ahead before coding or running implementation-driving commands
 
 ## Reason Requirements
