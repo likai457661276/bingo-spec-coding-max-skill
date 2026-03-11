@@ -15,7 +15,7 @@ description: 初始化专用技能。仅在用户显式输入 `$bingo-spec-codin
 4. 已存在文件默认不覆盖，除非传 `--force`。
 5. 对已初始化项目做规范重建时，优先使用 `--upgrade`，它等价于 `--reinit --force`。
 6. 初始化时会自动生成仓库级 `SPEC_CONTEXT` 初稿，支持 Java / Frontend / Python / 混合仓库；不确定信息保留为“待确认”。
-7. 注入的分级规则采用三轴输出：`Requested Level / Final Level / Change Type / Doc Mode`，并内置外部契约强制 `L1`、无既有 spec 禁止直接 `L2`、`L3` 仅限最小安全补丁等规则。
+7. 注入的分级规则采用三轴输出：`Requested Level / Final Level / Change Type / Doc Mode`，并新增 `L0` 问题分析通道，同时内置外部契约强制 `L1`、无既有 spec 禁止直接 `L2`、`L3` 仅限最小安全补丁等规则。
 8. 在目标项目内手动触发 skill 时，先自动执行 Python 同步脚本刷新当前项目的 `doc/`；若当前项目已有 `doc/`，先清空后重拷贝，再进入 `dry-run` 初始化。
 
 dry-run 预览应覆盖：
@@ -24,14 +24,17 @@ dry-run 预览应覆盖：
 - `spec/INDEX.md`
 - `spec/templates/PLAN_TEMPLATE.md`
 - `spec/templates/SPEC_TEMPLATE.md`
+- `spec/templates/QUESTION_TEMPLATE.md`
 - `spec/templates/TASK_TEMPLATE.md`
 - `spec/templates/CHANGE_TEMPLATE.md`
 - `spec/templates/HOTFIX_TEMPLATE.md`
 - `spec/prompts/*`
+- `spec/questions/`
 - `spec/features/`
 
 初始化后的需求文档约定：
 
+- `L0` 文档写入 `spec/questions/<date>-<topic>.md`
 - `L1` 文档写入 `spec/features/<feature-name>/`
 - `L2` 文档写入 `spec/features/<feature-name>/smallchange/`
 - `L3` 文档写入 `spec/features/<feature-name>/hotfix/`
@@ -61,9 +64,10 @@ skill 内置模板位于 `skills/bingo-spec-coding-max-skill/resources/doc/`。
 
 1. `spec_bootstrap_prompt_v6.md`（初始化流程提示词）
 2. `change_classifier.prompt.md`
-3. `generate_feature_tasks.prompt.md`
-4. `generate_change_tasks.prompt.md`
-5. `usage_examples.md`
+3. `generate_question_answer.prompt.md`
+4. `generate_feature_tasks.prompt.md`
+5. `generate_change_tasks.prompt.md`
+6. `usage_examples.md`
 
 默认语言参数为 `zh`，可切换为 `en`。
 

@@ -1,5 +1,19 @@
 # Usage Examples
 
+## Example 0 - Analyze Why Login Keeps Failing
+
+```text
+Requested Level: AUTO
+Final Level: L0
+Change Type: QUESTION
+Doc Mode: QUESTION_RECORD
+Workflow: Context -> Investigation -> Answer
+Human Gate: Confirm after Answer only if implementation should continue
+Reason: The user is asking for diagnosis and explanation first, not an implementation change.
+Scope Signals: Read-only investigation; compare possibilities; no direct code change requested
+Escalation Note: Reclassify to L1, L2, or L3 if the request turns into implementation work
+```
+
 ## Example 1 - Add Login Feature
 
 ```text

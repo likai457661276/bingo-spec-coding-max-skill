@@ -1,65 +1,64 @@
 # Change Classification Prompt
 
-Before planning, task decomposition, or coding, classify the current development request.
+Before planning, task decomposition, or coding, classify the current request.
 
-The goal is not only to estimate code size. You must classify across:
+Classify on three axes:
 
 1. `Workflow Level`
 2. `Change Type`
 3. `Doc Mode`
 
-Prioritize the following:
-
-- external contract changes must not be downgraded by mistake
-- behavior-changing work must not land without documentation
-- urgent fixes must stay on the smallest safe patch path
-
 ## Required Output Fields
 
-Return exactly these fields and do not omit any of them:
+Return exactly:
 
 ```text
-Requested Level: AUTO | L1 | L2 | L3
-Final Level: L1 | L2 | L3
-Change Type: FEATURE | SMALL_CHANGE | BUG_FIX
-Doc Mode: FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD
-Workflow: Context -> Plan -> Spec -> Tasks -> Code | Tasks -> Code | Patch Proposal -> Code
+Requested Level: AUTO | L0 | L1 | L2 | L3
+Final Level: L0 | L1 | L2 | L3
+Change Type: QUESTION | FEATURE | SMALL_CHANGE | BUG_FIX
+Doc Mode: QUESTION_RECORD | FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD
+Workflow: Context -> Investigation -> Answer | Context -> Plan -> Spec -> Tasks -> Code | Tasks -> Code | Patch Proposal -> Code
 Human Gate:
 Reason:
 Scope Signals:
 Escalation Note:
 ```
 
-Field notes:
+## Decision Rules
 
-- `Requested Level`: use the explicit level from user, developer, or system instructions when present; otherwise use `AUTO`
-- `Final Level`: the final level after applying the rules
-- `Change Type`: the type of change, not the workflow level
-- `Doc Mode`: the documentation depth that must be produced for this request
-
-## Hard Rules
-
-1. External contract changes must be at least `L1`, and `Doc Mode` must be `FULL_SPEC`.
-2. Do not use `L2` unless an existing feature spec can be reused.
-3. Use `L3` only for the smallest safe patch to a production incident, security issue, or critical failure.
-4. Explicitly requested levels may raise conservatism, but may not bypass hard rules.
+1. If the request is explanation, analysis, investigation, or option comparison without a direct implementation ask, prefer `L0 + QUESTION_RECORD`.
+2. External contract changes must be at least `L1`, and `Doc Mode` must be `FULL_SPEC`.
+3. Do not use `L2` unless an existing feature spec can be reused.
+4. Use `L3` only for the smallest safe patch to a production incident, security issue, or critical failure.
+5. Explicitly requested levels may raise conservatism, but may not bypass hard rules.
 
 ## Decision Order
 
-1. Check whether a level was explicitly requested.
-2. Check whether the request changes an external contract.
-3. Check whether the request is a production or security emergency fix.
-4. Check whether an existing spec can be reused.
-5. Then classify `FEATURE`, `SMALL_CHANGE`, or `BUG_FIX`.
+1. Check whether the request is analysis-only.
+2. Check whether a level was explicitly requested.
+3. Check whether the request changes an external contract.
+4. Check whether the request is a production or security emergency fix.
+5. Check whether an existing spec can be reused.
+6. Then finalize `Change Type` and `Doc Mode`.
 
 When information is incomplete, choose the more conservative and slower level.
 
 ## Human Gate Rules
 
+- `L0`: confirmation required after `Answer` only if implementation should continue
 - `L1`: confirmation required after `Plan`, `Spec`, and `Tasks`
 - `L2`: confirmation required after `Tasks`
 - `L3`: confirmation required after `Patch Proposal`
 
+## Path Rules
+
+- `L0`: `spec/questions/<date>-<topic>.md`
+- `L1`: `spec/features/<feature-name>/plan.md`, `spec.md`, `tasks.md`
+- `L2`: `spec/features/<feature-name>/smallchange/<date>-<change-name>.md`
+- `L3`: `spec/features/<feature-name>/hotfix/<date>-<hotfix-name>.md`
+
+If an `L0` investigation turns into a concrete implementation ask, reclassify into `L1`, `L2`, or `L3`.
+
 ## Final Execution Requirement
 
-Return only the required output fields in the required order. Do not add extra sections, do not use Markdown lists, and do not omit fields.
+Return only the required output fields in the required order.

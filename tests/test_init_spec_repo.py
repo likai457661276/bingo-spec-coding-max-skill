@@ -85,6 +85,7 @@ class InitSpecRepoTests(unittest.TestCase):
         required_files = {
             "spec_bootstrap_prompt_v6.md": "# bootstrap\n",
             "change_classifier.prompt.md": "# classifier\n",
+            "generate_question_answer.prompt.md": "# question answer\n",
             "generate_feature_tasks.prompt.md": "# feature tasks\n",
             "generate_change_tasks.prompt.md": "# change tasks\n",
             "usage_examples.md": "# usage\n",
@@ -103,6 +104,7 @@ class InitSpecRepoTests(unittest.TestCase):
             required_files = {
                 "spec_bootstrap_prompt_v6.md": f"# {marker} bootstrap\n",
                 "change_classifier.prompt.md": f"# {marker} classifier\n",
+                "generate_question_answer.prompt.md": f"# {marker} question answer\n",
                 "generate_feature_tasks.prompt.md": f"# {marker} feature tasks\n",
                 "generate_change_tasks.prompt.md": f"# {marker} change tasks\n",
                 "usage_examples.md": f"# {marker} usage\n",
@@ -209,6 +211,9 @@ dependencies = [
             self.assertTrue((project_root / "AGENTS.md").exists())
             self.assertTrue((project_root / "spec/INDEX.md").exists())
             self.assertTrue((project_root / "spec/features/.gitkeep").exists())
+            self.assertTrue((project_root / "spec/questions/.gitkeep").exists())
+            self.assertTrue((project_root / "spec/templates/QUESTION_TEMPLATE.md").exists())
+            self.assertTrue((project_root / "spec/prompts/generate_question_answer.prompt.md").exists())
             self.assertTrue((project_root / "spec/templates/PLAN_TEMPLATE.md").exists())
             self.assertTrue((project_root / "spec/templates/CHANGE_TEMPLATE.md").exists())
             self.assertTrue((project_root / "spec/templates/HOTFIX_TEMPLATE.md").exists())
@@ -291,32 +296,41 @@ dependencies = [
             hotfix_template = (project_root / "spec/templates/HOTFIX_TEMPLATE.md").read_text(encoding="utf-8")
             plan_template = (project_root / "spec/templates/PLAN_TEMPLATE.md").read_text(encoding="utf-8")
             task_template = (project_root / "spec/templates/TASK_TEMPLATE.md").read_text(encoding="utf-8")
+            question_template = (project_root / "spec/templates/QUESTION_TEMPLATE.md").read_text(encoding="utf-8")
 
-            self.assertIn("Requested Level: AUTO | L1 | L2 | L3", agents_content)
-            self.assertIn("Doc Mode: FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD", agents_content)
+            self.assertIn("Requested Level: AUTO | L0 | L1 | L2 | L3", agents_content)
+            self.assertIn("Doc Mode: QUESTION_RECORD | FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD", agents_content)
             self.assertIn("外部契约变更至少为 L1", agents_content)
             self.assertIn("都必须先生成实体 `.md` 文档", agents_content)
+            self.assertIn("L0（Question）", agents_content)
 
-            self.assertIn("特性目录约定", index_content)
+            self.assertIn("文档目录约定", index_content)
+            self.assertIn("spec/questions/<date>-<topic>.md", index_content)
             self.assertIn("spec/features/<feature-name>/smallchange/<date>-<change-name>.md", index_content)
             self.assertIn("spec/features/<feature-name>/hotfix/<date>-<hotfix-name>.md", index_content)
 
             self.assertIn("分级决策顺序", workflow_content)
+            self.assertIn("### L0 Question", workflow_content)
             self.assertIn("若相关 feature 不存在 `spec.md`", workflow_content)
             self.assertIn("Doc Mode: `HOTFIX_RECORD`", workflow_content)
             self.assertIn("文档先行规则", workflow_content)
             self.assertIn("由用户手动明确继续", workflow_content)
+            self.assertIn("spec/questions/<date>-<topic>.md", workflow_content)
             self.assertIn("spec/features/<feature-name>/smallchange/", workflow_content)
             self.assertIn("spec/features/<feature-name>/hotfix/", workflow_content)
 
-            self.assertIn("Workflow Level：`L1 | L2 | L3`", policy_content)
+            self.assertIn("Workflow Level：`L0 | L1 | L2 | L3`", policy_content)
+            self.assertIn("## L0 问题分析约束", policy_content)
             self.assertIn("命中以下任一信号，必须为 `L1 + FULL_SPEC`", policy_content)
             self.assertIn("若无既有 spec，不得直接走 `L2`", policy_content)
             self.assertIn("文档执行门禁", policy_content)
             self.assertIn("不得执行会推进实现的命令", policy_content)
+            self.assertIn("spec/questions/<date>-<topic>.md", policy_content)
             self.assertIn("spec/features/<feature-name>/smallchange/", policy_content)
             self.assertIn("spec/features/<feature-name>/hotfix/", policy_content)
 
+            self.assertIn("Doc Mode: QUESTION_RECORD", question_template)
+            self.assertIn("spec/questions/<date>-<topic>.md", question_template)
             self.assertIn("Doc Mode: CHANGE_RECORD", change_template)
             self.assertIn("升级为 `L1 + FULL_SPEC`", change_template)
             self.assertIn("spec/features/<feature-name>/smallchange/<date>-<change-name>.md", change_template)

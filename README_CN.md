@@ -14,10 +14,12 @@
 
 ## 文档导航
 
-- [作为 Codex 技能接入现有项目](#作为-codex-技能接入现有项目)
+- [快速上手](#快速上手)
+- [按场景选择命令](#按场景选择命令)
 - [变更分级](#变更分级)
 - [人类门禁](#人类门禁)
-- [运行方式](#运行方式)
+- [作为 Codex 技能接入现有项目](#作为-codex-技能接入现有项目)
+- [初始化输出](#初始化输出)
 - [使用示例](#使用示例)
 
 它包含四部分能力：
@@ -36,6 +38,27 @@
 
 这个项目的目标不是只提供一段 prompt，而是提供一套可落地的初始化入口，让后续 AI 开发流程能够围绕统一的 `Context -> Plan -> Spec -> Tasks -> Code` 结构运行，并尽量保持开发者原本的 vibe coding 习惯。
 
+## 快速上手
+
+如果你只想先把它跑起来，可以按下面顺序：
+
+1. 把 skill 安装到 `$CODEX_HOME/skills/`
+2. 用 Codex 打开目标项目根目录
+3. 在目标项目里显式输入 `$bingo-spec-coding-max-skill`
+4. 先看 `dry-run` 预览，确认后再 `apply`
+
+最常见的两条命令：
+
+- 首次初始化：`--dry-run` -> `--apply`
+- 已初始化项目升级规则：`--dry-run --upgrade` -> `--apply --upgrade`
+
+## 按场景选择命令
+
+- 第一次给项目接入 spec 体系：看 [作为 Codex 技能接入现有项目](#作为-codex-技能接入现有项目)
+- 项目已经初始化过，只想升级到最新规则：直接看 [推荐的执行命令](#推荐的执行命令) 里的 `--upgrade`
+- 项目里已经有团队自己维护的 spec 文档：先看 [已有 spec 文档时如何处理](#已有-spec-文档时如何处理)
+- 想把整套规则体系清空后重建：看 [已有 spec 文档时如何处理](#已有-spec-文档时如何处理) 中 `--upgrade-skill` 的风险说明
+
 ## 产品定位
 
 本仓库定位为：
@@ -47,7 +70,7 @@
 - 一个项目级 `AGENTS.md`
 - 一个统一入口 `spec/INDEX.md`
 - 一组可复用的模板与 prompts
-- 一套明确的变更分级和人类门禁规则
+- 一套明确的请求分级和人类门禁规则
 
 ## 适用场景
 
@@ -67,18 +90,18 @@
 
 当前版本把分级升级为三轴判断：
 
-- `Workflow Level`: `L1 | L2 | L3`
-- `Change Type`: `FEATURE | SMALL_CHANGE | BUG_FIX`
-- `Doc Mode`: `FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD`
+- `Workflow Level`: `L0 | L1 | L2 | L3`
+- `Change Type`: `QUESTION | FEATURE | SMALL_CHANGE | BUG_FIX`
+- `Doc Mode`: `QUESTION_RECORD | FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD`
 
 进入规划、任务拆分或编码前，要求先输出：
 
 ```text
-Requested Level: AUTO | L1 | L2 | L3
-Final Level: L1 | L2 | L3
-Change Type: FEATURE | SMALL_CHANGE | BUG_FIX
-Doc Mode: FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD
-Workflow: Context -> Plan -> Spec -> Tasks -> Code | Tasks -> Code | Patch Proposal -> Code
+Requested Level: AUTO | L0 | L1 | L2 | L3
+Final Level: L0 | L1 | L2 | L3
+Change Type: QUESTION | FEATURE | SMALL_CHANGE | BUG_FIX
+Doc Mode: QUESTION_RECORD | FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD
+Workflow: Context -> Investigation -> Answer | Context -> Plan -> Spec -> Tasks -> Code | Tasks -> Code | Patch Proposal -> Code
 Human Gate:
 Reason:
 Scope Signals:
@@ -87,14 +110,16 @@ Escalation Note:
 
 强制规则：
 
+- 如果请求只是解释、分析、排查或方案比较，且未要求直接修改实现，优先走 `L0 + QUESTION_RECORD`
 - 外部契约变更必须至少为 `L1 + FULL_SPEC`
 - 没有既有 feature spec，不允许直接走 `L2`
 - `L3` 只能用于最小安全补丁
 - 用户或开发者显式指定等级只能上调，不能绕过硬规则降级
-- `L1 / L2 / L3` 都必须先生成实体 `.md` 文档，待用户确认并手动明确继续后，才能进入编码或执行推进实现的命令
+- `L0 / L1 / L2 / L3` 都必须先生成实体 `.md` 文档，待用户确认并手动明确继续后，才能进入编码或执行推进实现的命令
 
 默认映射关系：
 
+- `L0 -> QUESTION + QUESTION_RECORD`
 - `L1 -> FEATURE + FULL_SPEC`
 - `L2 -> SMALL_CHANGE/BUG_FIX + CHANGE_RECORD`
 - `L3 -> BUG_FIX + HOTFIX_RECORD`
@@ -102,7 +127,22 @@ Escalation Note:
 ## 人类门禁
 
 本项目明确要求：AI 不能只靠分级自动一路执行到代码提交，不同等级必须在不同阶段暂停，等待人类确认。
-更严格地说，三种等级都必须先把对应的实体 `.md` 文档落地，再等待用户确认并手动明确继续。
+更严格地说，四种等级都必须先把对应的实体 `.md` 文档落地，再等待用户确认并手动明确继续。
+
+### L0 的人类介入时机
+
+通常 `L0` 不直接进入实现，因此它的目标是先把分析结论沉淀下来。
+
+需要确认的情况：
+
+- 如果 `L0` 只停留在分析、解释、排查、方案比较，可以先完成 `Answer`
+- 如果 `L0` 分析后要继续推进实现，则必须先确认分析结论，再升级为 `L1`、`L2` 或 `L3`
+
+建议落地前提：
+
+- `spec/questions/<date>-<topic>.md` 已实际生成
+- 结论、依据和下一步建议已经写清楚
+- 如果要进入实现，用户已明确要求继续，且已重新完成分级
 
 ### L1 的人类介入时机
 
@@ -159,7 +199,7 @@ Escalation Note:
 默认执行方式：
 
 1. 先 `dry-run`
-2. 展示将创建或覆盖的文件，包括 `v6` prompt、L1/L2/L3 模板与 `spec/features/` 骨架
+2. 展示将创建或覆盖的文件，包括 `v6` prompt、`L0/L1/L2/L3` 模板、`spec/questions/` 与 `spec/features/` 骨架
 3. 获得确认后再 `apply`
 
 ## 作为 Codex 技能接入现有项目
@@ -257,12 +297,14 @@ doc/
   zh/
     spec_bootstrap_prompt_v6.md
     change_classifier.prompt.md
+    generate_question_answer.prompt.md
     generate_feature_tasks.prompt.md
     generate_change_tasks.prompt.md
     usage_examples.md
   en/
     spec_bootstrap_prompt_v6.md
     change_classifier.prompt.md
+    generate_question_answer.prompt.md
     generate_feature_tasks.prompt.md
     generate_change_tasks.prompt.md
     usage_examples.md
@@ -292,6 +334,12 @@ Codex 应该按以下方式工作：
 ### 推荐的执行命令
 
 如果 Codex 需要在终端中显式执行脚本，建议使用技能目录下的脚本，但把 `project-root` 指向当前项目。等价执行顺序如下：
+
+常见选择方式：
+
+- 首次初始化项目：使用下面第一组 `--dry-run` / `--apply`
+- 已初始化项目升级规则：使用下面第二组带 `--upgrade` 的命令
+- 已有重要 `spec` 文档：先不要直接执行 `apply --upgrade`，先看完预览并参考 [已有 spec 文档时如何处理](#已有-spec-文档时如何处理)
 
 macOS / Linux:
 
@@ -324,6 +372,93 @@ powershell -ExecutionPolicy Bypass -File $env:CODEX_HOME\skills\bingo-spec-codin
 ```
 
 如果刚升级过 skill，或目标项目已经初始化过，重新手动触发 `$bingo-spec-coding-max-skill` 即可。skill 会先刷新 `doc/`，然后再走新的初始化预览。
+
+### 已有 spec 文档时如何处理
+
+如果目标项目里已经有团队自己维护的 `spec/` 文档，默认不要直接做“整套清空后重建”。
+
+推荐优先采用下面的处理方式：
+
+- 先执行 `dry-run --upgrade`，确认本次会覆盖哪些 bootstrap 管理文件
+- 确认无误后再执行 `apply --upgrade`
+- 把团队自己沉淀的业务文档尽量放在 `spec/features/` 或 `spec/questions/` 下，避免与框架级文件重名
+
+请特别区分两种升级方式：
+
+- `--upgrade`
+  - 用于已初始化项目的规则升级
+  - 等价于 `--reinit --force`
+  - 主要覆盖 bootstrap 固定管理的文件，如 `AGENTS.md`、`spec/INDEX.md`、`spec/SPEC_WORKFLOW.md`、`spec/templates/*`、`spec/prompts/*`、`spec/usage/usage_examples.md`
+  - 更适合“保留已有业务 spec，仅升级规则框架”的场景
+
+- `--upgrade-skill`
+  - 用于接入脚本层面的整套刷新
+  - 会清除目标项目现有 `doc/`、`spec/`、`AGENTS.md`、`.spec-bootstrap.lock`
+  - 更适合“准备整体重建规范体系”的场景
+  - 如果项目里已有重要 spec 文档，执行前应先备份
+
+保守建议：
+
+- 有价值的现有 spec 文档：优先走 `dry-run --upgrade`
+- 现有 spec 已混乱且准备整体换新：先备份，再考虑 `--upgrade-skill`
+
+交互示例：
+
+假设目标项目里已经有这些业务文档：
+
+- `spec/features/auth-login/spec.md`
+- `spec/features/auth-login/tasks.md`
+- `spec/features/auth-login/smallchange/2026-03-01-trim-password-input.md`
+
+你现在只想把项目升级到最新 skill 规则，不想清空这些业务 spec。
+
+用户：
+
+```text
+请对当前项目按最新的 bingo-spec-coding-max-skill 规则做一次升级，但先不要直接覆盖。项目里已经有 spec/features/auth-login/ 下的文档，我想先确认这些业务 spec 不会被清掉。
+```
+
+agent 第一步应该做什么：
+
+```text
+先执行 dry-run --upgrade，检查本次会覆盖哪些 bootstrap 管理文件，不直接进入 apply。
+```
+
+agent 在 dry-run 后应如何反馈：
+
+```text
+本次预览会更新的主要是规则框架文件，例如：
+- AGENTS.md
+- spec/INDEX.md
+- spec/SPEC_WORKFLOW.md
+- spec/CHANGE_POLICY.md
+- spec/templates/*
+- spec/prompts/*
+- spec/usage/usage_examples.md
+
+当前未看到需要直接清除 spec/features/auth-login/spec.md、tasks.md 或 smallchange 历史文档的信号。
+
+如果你确认这次只升级规则框架，我再继续 apply --upgrade。
+```
+
+用户确认：
+
+```text
+可以，继续 apply --upgrade，但保留现有 auth-login 业务 spec。
+```
+
+agent 最终应说明：
+
+```text
+已按升级模式刷新 bootstrap 管理文件。
+保留了现有业务文档：
+- spec/features/auth-login/spec.md
+- spec/features/auth-login/tasks.md
+- spec/features/auth-login/smallchange/2026-03-01-trim-password-input.md
+
+本次更新的是规则框架、模板、prompts、AGENTS.md 和索引类文件。
+如果后续需要整套重建，再单独评估是否使用 --upgrade-skill。
+```
 
 ### 接入约束
 
@@ -454,11 +589,15 @@ bash ./skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh --apply
 │   ├── prompts
 │   │   ├── spec_bootstrap_prompt_v6.md
 │   │   ├── change_classifier.prompt.md
+│   │   ├── generate_question_answer.prompt.md
 │   │   ├── generate_feature_tasks.prompt.md
 │   │   └── generate_change_tasks.prompt.md
+│   ├── questions
+│   │   └── 2026-03-09-why-login-fails.md
 │   ├── templates
 │   │   ├── PLAN_TEMPLATE.md
 │   │   ├── SPEC_TEMPLATE.md
+│   │   ├── QUESTION_TEMPLATE.md
 │   │   ├── TASK_TEMPLATE.md
 │   │   ├── CHANGE_TEMPLATE.md
 │   │   └── HOTFIX_TEMPLATE.md
@@ -469,10 +608,13 @@ bash ./skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh --apply
 
 其中：
 
+- `spec/templates/QUESTION_TEMPLATE.md` 用于 `L0`
 - `spec/templates/PLAN_TEMPLATE.md` 用于 `L1`
 - `spec/templates/CHANGE_TEMPLATE.md` 用于 `L2`
 - `spec/templates/HOTFIX_TEMPLATE.md` 用于 `L3`
+- `spec/questions/` 是问题分析与只读调研记录目录
 - `spec/features/` 是后续 feature 规格和 change 历史的根目录
+- `L0` 文档固定保存在 `spec/questions/`
 - `L1` 文档固定保存在 `spec/features/<feature-name>/`
 - `L2` 历史固定保存在 `spec/features/<feature-name>/smallchange/`
 - `L3` 历史固定保存在 `spec/features/<feature-name>/hotfix/`
@@ -486,6 +628,32 @@ bash ./skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh --apply
 ```
 
 ### 分级示例
+
+#### `L0` 完整示例
+
+用户怎么提问：
+
+```text
+请先帮我分析一下：登录功能在测试环境频繁失败，但我现在还不想直接改代码。我想先知道更可能是配置问题、令牌校验问题，还是请求参数处理问题。
+```
+
+agent 应该输出什么：
+
+```text
+Requested Level: AUTO
+Final Level: L0
+Change Type: QUESTION
+Doc Mode: QUESTION_RECORD
+Workflow: Context -> Investigation -> Answer
+Human Gate: 仅当后续要进入实现时，在 Answer 后确认
+Reason: 当前请求的目标是分析与解释，不是直接进入实现，因此应先走 L0 问题分析流程。
+Scope Signals: 只读排查；需要比较多种可能原因；尚未要求修改实现
+Escalation Note: 如果排查后决定修改认证流程、接口行为或补丁实现，再升级为 L1、L2 或 L3
+```
+
+文档落到哪里：
+
+- `spec/questions/2026-03-09-why-login-fails.md`
 
 1. `L1`: 新增登录功能，先做 `Plan -> Spec -> Tasks`，每阶段等待确认，再进入编码。
 2. `L2`: 修复密码校验缺陷，先生成变更任务，确认后再编码。

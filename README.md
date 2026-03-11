@@ -14,10 +14,12 @@ Bootstrap kit that turns any repository into a Spec-Driven Development workspace
 
 ## Docs
 
-- [Install as a Codex Skill](#install-as-a-codex-skill-for-existing-projects)
+- [Quick Start](#quick-start)
+- [Choose By Scenario](#choose-by-scenario)
 - [Change Classification](#change-classification)
 - [Human Gates](#human-gates)
-- [Usage](#usage)
+- [Install as a Codex Skill](#install-as-a-codex-skill-for-existing-projects)
+- [Initialization Output](#initialization-output)
 - [Examples](#examples)
 
 It provides four core parts:
@@ -36,6 +38,27 @@ The current version also adds:
 
 The goal is not to ship just another prompt. This repository provides a practical initialization entry point so later AI-assisted development can run around a consistent `Context -> Plan -> Spec -> Tasks -> Code` structure while preserving developers' existing vibe coding habits as much as possible.
 
+## Quick Start
+
+If you only want the shortest path to a working setup:
+
+1. install the skill into `$CODEX_HOME/skills/`
+2. open the target project root in Codex
+3. explicitly trigger `$bingo-spec-coding-max-skill`
+4. review the `dry-run` preview, then confirm `apply`
+
+The two most common command paths are:
+
+- first initialization: `--dry-run` -> `--apply`
+- upgrade an already initialized project: `--dry-run --upgrade` -> `--apply --upgrade`
+
+## Choose By Scenario
+
+- first time adding the spec system to a project: start with [Install as a Codex Skill](#install-as-a-codex-skill-for-existing-projects)
+- project already initialized and you only want the latest rule framework: jump to [Recommended Execution Commands](#recommended-execution-commands) and use `--upgrade`
+- project already contains team-authored spec docs: read [How To Handle Existing Spec Docs](#how-to-handle-existing-spec-docs) first
+- you want to wipe and rebuild the whole spec system: read the `--upgrade-skill` warning in [How To Handle Existing Spec Docs](#how-to-handle-existing-spec-docs)
+
 ## Positioning
 
 This repository is a bootstrap kit for initializing Spec-driven collaboration rules.
@@ -43,14 +66,14 @@ This repository is a bootstrap kit for initializing Spec-driven collaboration ru
 At the current stage, it is most accurate to describe it as an initializer plus workflow-framework injector:
 
 - it injects a consistent spec structure, prompts, templates, and approval gates into the target repository
-- it provides `L1/L2/L3` classification rules for the target project
+- it provides `L0/L1/L2/L3` classification rules for the target project
 - it provides default workflow templates and entry conventions for each level
 
 The intended outcome is:
 
 - developers provide a broad request in their usual style
-- the initialized target project uses `AGENTS.md`, `SPEC_WORKFLOW.md`, and prompts to decide whether the work is `L1`, `L2`, or `L3`
-- the initialized target project then routes the request into the correct `Plan / Spec / Tasks / Patch Proposal`
+- the initialized target project uses `AGENTS.md`, `SPEC_WORKFLOW.md`, and prompts to decide whether the work is `L0`, `L1`, `L2`, or `L3`
+- the initialized target project then routes the request into the correct `Answer / Plan / Spec / Tasks / Patch Proposal`
 - the transition stays simple and lightweight instead of interrupting existing vibe coding habits
 
 After initialization, the target repository should have:
@@ -58,7 +81,7 @@ After initialization, the target repository should have:
 - a project-level `AGENTS.md`
 - a single entrypoint at `spec/INDEX.md`
 - reusable templates and prompts
-- explicit change classification and human-gate rules
+- explicit request classification and human-gate rules
 
 ## Use Cases
 
@@ -78,18 +101,18 @@ After initialization, the target repository should have:
 
 The current version upgrades classification to three axes:
 
-- `Workflow Level`: `L1 | L2 | L3`
-- `Change Type`: `FEATURE | SMALL_CHANGE | BUG_FIX`
-- `Doc Mode`: `FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD`
+- `Workflow Level`: `L0 | L1 | L2 | L3`
+- `Change Type`: `QUESTION | FEATURE | SMALL_CHANGE | BUG_FIX`
+- `Doc Mode`: `QUESTION_RECORD | FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD`
 
 Before planning, task generation, or coding, the initialized project is expected to output:
 
 ```text
-Requested Level: AUTO | L1 | L2 | L3
-Final Level: L1 | L2 | L3
-Change Type: FEATURE | SMALL_CHANGE | BUG_FIX
-Doc Mode: FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD
-Workflow: Context -> Plan -> Spec -> Tasks -> Code | Tasks -> Code | Patch Proposal -> Code
+Requested Level: AUTO | L0 | L1 | L2 | L3
+Final Level: L0 | L1 | L2 | L3
+Change Type: QUESTION | FEATURE | SMALL_CHANGE | BUG_FIX
+Doc Mode: QUESTION_RECORD | FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD
+Workflow: Context -> Investigation -> Answer | Context -> Plan -> Spec -> Tasks -> Code | Tasks -> Code | Patch Proposal -> Code
 Human Gate:
 Reason:
 Scope Signals:
@@ -98,14 +121,16 @@ Escalation Note:
 
 Hard rules:
 
+- if the request is explanation, analysis, investigation, or option comparison without a direct implementation ask, prefer `L0 + QUESTION_RECORD`
 - external contract changes must be at least `L1 + FULL_SPEC`
 - do not use `L2` unless a reusable feature spec already exists
 - `L3` is only for the smallest safe patch
 - explicitly requested levels may raise conservatism, but may not bypass hard rules
-- `L1 / L2 / L3` must all generate concrete `.md` documents first, and coding or implementation-driving commands may continue only after user confirmation and a manual go-ahead
+- `L0 / L1 / L2 / L3` must all generate concrete `.md` documents first, and coding or implementation-driving commands may continue only after user confirmation and a manual go-ahead
 
 Default mapping:
 
+- `L0 -> QUESTION + QUESTION_RECORD`
 - `L1 -> FEATURE + FULL_SPEC`
 - `L2 -> SMALL_CHANGE/BUG_FIX + CHANGE_RECORD`
 - `L3 -> BUG_FIX + HOTFIX_RECORD`
@@ -113,7 +138,22 @@ Default mapping:
 ## Human Gates
 
 This project explicitly requires human confirmation at defined checkpoints. AI must not classify a change and continue all the way to code commit without stopping at the required stage.
-More strictly, all three levels must first materialize the required `.md` document(s), then wait for user review and a manual go-ahead.
+More strictly, all four levels must first materialize the required `.md` document(s), then wait for user review and a manual go-ahead.
+
+### Human Checkpoints for L0
+
+`L0` usually stops at analysis instead of implementation.
+
+Confirmation is needed as follows:
+
+- if the work stays as clarification, investigation, explanation, or option comparison, finish the `Answer` record first
+- if the result should move into implementation, confirm the analysis result first and then reclassify into `L1`, `L2`, or `L3`
+
+Recommended readiness:
+
+- `spec/questions/<date>-<topic>.md` exists as a concrete file
+- the conclusion, evidence, and suggested next step are written down
+- if implementation should continue, the user has explicitly asked to continue and the request has been reclassified
 
 ### Human Checkpoints for L1
 
@@ -170,7 +210,7 @@ Run this skill only when the user explicitly mentions `$bingo-spec-coding-max-sk
 Default execution flow:
 
 1. run `dry-run`
-2. show which files will be created or overwritten, including the `v6` prompt, L1/L2/L3 templates, and the `spec/features/` skeleton
+2. show which files will be created or overwritten, including the `v6` prompt, `L0/L1/L2/L3` templates, `spec/questions/`, and the `spec/features/` skeleton
 3. run `apply` only after confirmation
 
 ## Install as a Codex Skill for Existing Projects
@@ -268,12 +308,14 @@ doc/
   zh/
     spec_bootstrap_prompt_v6.md
     change_classifier.prompt.md
+    generate_question_answer.prompt.md
     generate_feature_tasks.prompt.md
     generate_change_tasks.prompt.md
     usage_examples.md
   en/
     spec_bootstrap_prompt_v6.md
     change_classifier.prompt.md
+    generate_question_answer.prompt.md
     generate_feature_tasks.prompt.md
     generate_change_tasks.prompt.md
     usage_examples.md
@@ -303,6 +345,12 @@ Codex should:
 ### Recommended Execution Commands
 
 If Codex needs to call scripts from the terminal, use the scripts under the skill directory and point `project-root` to the current project. The equivalent command order is:
+
+Common choices:
+
+- first initialization: use the first `--dry-run` / `--apply` pair below
+- upgrade an already initialized project: use the second command pair with `--upgrade`
+- important existing `spec` docs in the project: do not jump straight to `apply --upgrade`; inspect the preview first and read [How To Handle Existing Spec Docs](#how-to-handle-existing-spec-docs)
 
 macOS / Linux:
 
@@ -335,6 +383,93 @@ powershell -ExecutionPolicy Bypass -File $env:CODEX_HOME\skills\bingo-spec-codin
 ```
 
 If the skill was just upgraded, or the project has already been initialized before, simply trigger `$bingo-spec-coding-max-skill` again. The skill refreshes `doc/` first and then runs the new initialization preview.
+
+### How To Handle Existing Spec Docs
+
+If the target project already contains team-maintained `spec/` documents, do not default to a full wipe-and-rebuild.
+
+Prefer this safer path first:
+
+- run `dry-run --upgrade` to inspect which bootstrap-managed files would be replaced
+- run `apply --upgrade` only after that preview looks correct
+- keep team-authored business documents under `spec/features/` or `spec/questions/` when possible, instead of reusing bootstrap framework file names
+
+Please distinguish these two upgrade paths:
+
+- `--upgrade`
+  - used for upgrading the rule framework in an already initialized project
+  - equivalent to `--reinit --force`
+  - mainly overwrites bootstrap-managed files such as `AGENTS.md`, `spec/INDEX.md`, `spec/SPEC_WORKFLOW.md`, `spec/templates/*`, `spec/prompts/*`, and `spec/usage/usage_examples.md`
+  - best when you want to keep existing business spec docs and only refresh the framework
+
+- `--upgrade-skill`
+  - used by the setup script for a full refresh
+  - clears the target project's `doc/`, `spec/`, `AGENTS.md`, and `.spec-bootstrap.lock`
+  - best when you intend to rebuild the spec system from scratch
+  - back up important spec documents first
+
+Conservative recommendation:
+
+- valuable existing spec docs: use `dry-run --upgrade` first
+- messy existing spec docs and a planned reset: back up first, then consider `--upgrade-skill`
+
+Interaction example:
+
+Assume the target project already contains:
+
+- `spec/features/auth-login/spec.md`
+- `spec/features/auth-login/tasks.md`
+- `spec/features/auth-login/smallchange/2026-03-01-trim-password-input.md`
+
+You only want to upgrade the project to the latest skill rules and keep those business-owned spec docs.
+
+User:
+
+```text
+Please upgrade the current project to the latest bingo-spec-coding-max-skill rule set, but do not overwrite anything yet. The project already has documents under spec/features/auth-login/, and I want to confirm those business spec files will not be wiped.
+```
+
+What the agent should do first:
+
+```text
+Run dry-run --upgrade first and inspect which bootstrap-managed files would be replaced before applying anything.
+```
+
+What the agent should report after dry-run:
+
+```text
+The preview mainly updates rule-framework files such as:
+- AGENTS.md
+- spec/INDEX.md
+- spec/SPEC_WORKFLOW.md
+- spec/CHANGE_POLICY.md
+- spec/templates/*
+- spec/prompts/*
+- spec/usage/usage_examples.md
+
+At this stage, there is no signal that spec/features/auth-login/spec.md, tasks.md, or the smallchange history files need to be cleared directly.
+
+If your goal is only to refresh the rule framework, I can continue with apply --upgrade next.
+```
+
+User confirmation:
+
+```text
+Yes, continue with apply --upgrade, but keep the existing auth-login business spec docs.
+```
+
+What the agent should say after apply:
+
+```text
+The bootstrap-managed framework files were refreshed in upgrade mode.
+The existing business-owned documents were kept in place:
+- spec/features/auth-login/spec.md
+- spec/features/auth-login/tasks.md
+- spec/features/auth-login/smallchange/2026-03-01-trim-password-input.md
+
+This update refreshed the rule framework, templates, prompts, AGENTS.md, and index/policy files.
+If you later want a full rebuild, we should evaluate --upgrade-skill separately.
+```
 
 ### Integration Constraints
 
@@ -465,11 +600,15 @@ Generation rules:
 │   ├── prompts
 │   │   ├── spec_bootstrap_prompt_v6.md
 │   │   ├── change_classifier.prompt.md
+│   │   ├── generate_question_answer.prompt.md
 │   │   ├── generate_feature_tasks.prompt.md
 │   │   └── generate_change_tasks.prompt.md
+│   ├── questions
+│   │   └── 2026-03-09-why-login-fails.md
 │   ├── templates
 │   │   ├── PLAN_TEMPLATE.md
 │   │   ├── SPEC_TEMPLATE.md
+│   │   ├── QUESTION_TEMPLATE.md
 │   │   ├── TASK_TEMPLATE.md
 │   │   ├── CHANGE_TEMPLATE.md
 │   │   └── HOTFIX_TEMPLATE.md
@@ -480,10 +619,13 @@ Generation rules:
 
 Where:
 
+- `spec/templates/QUESTION_TEMPLATE.md` is used for `L0`
 - `spec/templates/PLAN_TEMPLATE.md` is used for `L1`
 - `spec/templates/CHANGE_TEMPLATE.md` is used for `L2`
 - `spec/templates/HOTFIX_TEMPLATE.md` is used for `L3`
+- `spec/questions/` stores question-analysis and read-only investigation records
 - `spec/features/` is the root directory for future feature specs and change history
+- `L0` docs live under `spec/questions/`
 - `L1` docs live under `spec/features/<feature-name>/`
 - `L2` history lives under `spec/features/<feature-name>/smallchange/`
 - `L3` history lives under `spec/features/<feature-name>/hotfix/`
@@ -497,6 +639,32 @@ Please run $bingo-spec-coding-max-skill to initialize the current repository. St
 ```
 
 ### Classification Examples
+
+#### Full `L0` Example
+
+How the user asks:
+
+```text
+Please help me analyze this first: login keeps failing in the test environment, but I do not want to change code yet. I want to understand whether configuration, token validation, or request parameter handling is the more likely cause.
+```
+
+What the agent should output:
+
+```text
+Requested Level: AUTO
+Final Level: L0
+Change Type: QUESTION
+Doc Mode: QUESTION_RECORD
+Workflow: Context -> Investigation -> Answer
+Human Gate: Confirm after Answer only if implementation should continue
+Reason: The current goal is analysis and explanation, not implementation, so the request should stay on the L0 question flow first.
+Scope Signals: Read-only investigation; compare multiple possible causes; no implementation change requested yet
+Escalation Note: If the investigation turns into authentication-flow changes, interface behavior changes, or a concrete patch, escalate to L1, L2, or L3
+```
+
+Where the document goes:
+
+- `spec/questions/2026-03-09-why-login-fails.md`
 
 1. `L1`: add a login feature. Finish `Plan -> Spec -> Tasks`, wait for confirmation at each stage, then start coding.
 2. `L2`: fix password validation. Generate change tasks first, confirm them, then start coding.

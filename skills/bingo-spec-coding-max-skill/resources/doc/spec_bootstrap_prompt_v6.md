@@ -1,61 +1,46 @@
 # Spec System Initialization Prompt v6
 
-You are a senior software architect and AI development workflow designer.
+Initialize the repository into a Spec-Driven Development structure for AI-assisted work.
 
-Your task is to transform the current repository into a Spec-Driven Development project that supports AI-assisted coding for Codex, GPT, and Claude style agents.
-
-Target model:
-
-`Context -> Plan -> Spec -> Tasks -> Code`
-
-Not every request follows the full path. Before execution, classification must happen first and the request must be routed to the correct workflow.
-
-This prompt is both a directory guide and a contract for:
-
-- change classification
-- human approval gates
-- spec repository structure
-- minimum file content
-- agent navigation rules
-
-## STEP 0 - Classify Across Three Axes First
+## STEP 0 - Classify First
 
 Before planning, task generation, or coding, output:
 
 ```text
-Requested Level: AUTO | L1 | L2 | L3
-Final Level: L1 | L2 | L3
-Change Type: FEATURE | SMALL_CHANGE | BUG_FIX
-Doc Mode: FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD
-Workflow: Context -> Plan -> Spec -> Tasks -> Code | Tasks -> Code | Patch Proposal -> Code
+Requested Level: AUTO | L0 | L1 | L2 | L3
+Final Level: L0 | L1 | L2 | L3
+Change Type: QUESTION | FEATURE | SMALL_CHANGE | BUG_FIX
+Doc Mode: QUESTION_RECORD | FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD
+Workflow: Context -> Investigation -> Answer | Context -> Plan -> Spec -> Tasks -> Code | Tasks -> Code | Patch Proposal -> Code
 Human Gate:
 Reason:
 Scope Signals:
 Escalation Note:
 ```
 
-Hard rules:
+Rules:
 
+- `L0` is for clarification, analysis, code reading, option comparison, and read-only investigation
 - external contract changes must be `L1 + FULL_SPEC`
 - no direct `L2` without an existing feature spec
 - `L3` is only for the smallest safe patch
-- explicitly requested levels may raise conservatism, but may not bypass hard rules
+- all levels require concrete `.md` files before implementation-driving commands
 
-## STEP 1 - Human Gate Rules
+## STEP 1 - Human Gates
 
-- `L1`: confirm after `Plan`, `Spec`, and `Tasks`
-- `L2`: confirm after `Tasks`
-- `L3`: confirm after `Patch Proposal`
+- `L0`: after `Answer` only if implementation should continue
+- `L1`: after `Plan`, `Spec`, and `Tasks`
+- `L2`: after `Tasks`
+- `L3`: after `Patch Proposal`
 
-## STEP 2 - Workflow By Level
+## STEP 2 - Workflow Routing
 
+- `L0`: `Context -> Investigation -> Answer`
 - `L1`: `Context -> Plan -> Spec -> Tasks -> Code`
 - `L2`: `Tasks -> Code`
 - `L3`: `Patch Proposal -> Code`
 
-## STEP 3 - Initialize Spec Repository
-
-Create:
+## STEP 3 - Create Repository Structure
 
 ```text
 spec/
@@ -66,10 +51,24 @@ spec/
   templates/
   prompts/
   usage/
+  questions/
   features/
 AGENTS.md
 ```
 
-## STEP 4 - Minimum Content Contract
+## STEP 4 - Path Contract
 
-All generated files must contain useful starter content. Empty files are not allowed.
+- `L0`: `spec/questions/<date>-<topic>.md`
+- `L1`: `spec/features/<feature-name>/plan.md`, `spec.md`, `tasks.md`
+- `L2`: `spec/features/<feature-name>/smallchange/<date>-<change-name>.md`
+- `L3`: `spec/features/<feature-name>/hotfix/<date>-<hotfix-name>.md`
+
+## STEP 5 - Prompt Contract
+
+Keep these files consistent with the same classification model:
+
+- `change_classifier.prompt.md`
+- `generate_question_answer.prompt.md`
+- `generate_feature_tasks.prompt.md`
+- `generate_change_tasks.prompt.md`
+- `usage_examples.md`

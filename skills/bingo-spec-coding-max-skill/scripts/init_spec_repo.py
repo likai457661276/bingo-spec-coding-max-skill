@@ -58,6 +58,7 @@ CYPRESS_CONFIGS = (
 DOC_TO_TARGET = {
     "spec_bootstrap_prompt_v6.md": "spec/prompts/spec_bootstrap_prompt_v6.md",
     "change_classifier.prompt.md": "spec/prompts/change_classifier.prompt.md",
+    "generate_question_answer.prompt.md": "spec/prompts/generate_question_answer.prompt.md",
     "generate_feature_tasks.prompt.md": "spec/prompts/generate_feature_tasks.prompt.md",
     "generate_change_tasks.prompt.md": "spec/prompts/generate_change_tasks.prompt.md",
     "usage_examples.md": "spec/usage/usage_examples.md",
@@ -86,11 +87,11 @@ INIT -> ANALYSIS -> EXECUTION -> COMPLETED | FAILED | ABORTED
 
 在进入规划、任务拆分或编码前，先完成三轴分级，并严格输出：
 
-Requested Level: AUTO | L1 | L2 | L3
-Final Level: L1 | L2 | L3
-Change Type: FEATURE | SMALL_CHANGE | BUG_FIX
-Doc Mode: FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD
-Workflow: Context -> Plan -> Spec -> Tasks -> Code | Tasks -> Code | Patch Proposal -> Code
+Requested Level: AUTO | L0 | L1 | L2 | L3
+Final Level: L0 | L1 | L2 | L3
+Change Type: QUESTION | FEATURE | SMALL_CHANGE | BUG_FIX
+Doc Mode: QUESTION_RECORD | FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD
+Workflow: Context -> Investigation -> Answer | Context -> Plan -> Spec -> Tasks -> Code | Tasks -> Code | Patch Proposal -> Code
 Human Gate:
 Reason:
 Scope Signals:
@@ -100,19 +101,25 @@ Escalation Note:
 
 默认工作流：Context -> Plan -> Spec -> Tasks -> Code
 
+L0（Question）: Context -> Investigation -> Answer
 L1（Feature）: Context -> Plan -> Spec -> Tasks -> Code
 L2（Small Change）: Tasks -> Code
 L3（Hotfix）: Patch Proposal -> Code
 
 ## Hard Rules
 
-1. 外部契约变更至少为 L1，且 Doc Mode 必须为 FULL_SPEC。
-2. L2 必须依附已有 feature spec；若无 spec，升级为 L1。
-3. L3 只能用于最小安全补丁；范围扩大即升级为 L2 或 L1。
-4. 用户或开发者显式指定等级只能上调，不能绕过强制规则。
-5. L1/L2/L3 都必须先生成实体 `.md` 文档，待用户确认并手动明确继续后，才能进入代码实现或命令执行。
+1. 若请求只是解释、分析、排查、方案比较，且未要求直接改动实现，优先归类为 `L0 + QUESTION_RECORD`。
+2. 外部契约变更至少为 L1，且 Doc Mode 必须为 FULL_SPEC。
+3. L2 必须依附已有 feature spec；若无 spec，升级为 L1。
+4. L3 只能用于最小安全补丁；范围扩大即升级为 L2 或 L1。
+5. 用户或开发者显式指定等级只能上调，不能绕过强制规则。
+6. L0/L1/L2/L3 都必须先生成实体 `.md` 文档；任何代码实现或推进实现的命令都必须等待用户确认并手动明确继续。
 
 ## Human Gates
+
+L0 需要在以下阶段后获得确认：
+
+1. Answer（仅当后续要进入实现时）
 
 L1 需要在以下阶段后获得确认：
 
@@ -142,42 +149,47 @@ L3 需要在以下阶段后获得确认：
 
 ## Agent 入口
 
-Agent 应从本文件进入规格树，再定位到 `spec/features/<feature-name>/` 下的相关特性目录。
+Agent 应从本文件进入规格树，再根据请求类型定位到 `spec/questions/` 或 `spec/features/<feature-name>/`。
 
 ## Prompt 来源
 
 1. [spec_bootstrap_prompt_v6.md](./prompts/spec_bootstrap_prompt_v6.md)
 2. [change_classifier.prompt.md](./prompts/change_classifier.prompt.md)
-3. [generate_feature_tasks.prompt.md](./prompts/generate_feature_tasks.prompt.md)
-4. [generate_change_tasks.prompt.md](./prompts/generate_change_tasks.prompt.md)
+3. [generate_question_answer.prompt.md](./prompts/generate_question_answer.prompt.md)
+4. [generate_feature_tasks.prompt.md](./prompts/generate_feature_tasks.prompt.md)
+5. [generate_change_tasks.prompt.md](./prompts/generate_change_tasks.prompt.md)
 
 ## 模板
 
 1. [PLAN_TEMPLATE.md](./templates/PLAN_TEMPLATE.md)
 2. [SPEC_TEMPLATE.md](./templates/SPEC_TEMPLATE.md)
-3. [TASK_TEMPLATE.md](./templates/TASK_TEMPLATE.md)
-4. [CHANGE_TEMPLATE.md](./templates/CHANGE_TEMPLATE.md)
-5. [HOTFIX_TEMPLATE.md](./templates/HOTFIX_TEMPLATE.md)
+3. [QUESTION_TEMPLATE.md](./templates/QUESTION_TEMPLATE.md)
+4. [TASK_TEMPLATE.md](./templates/TASK_TEMPLATE.md)
+5. [CHANGE_TEMPLATE.md](./templates/CHANGE_TEMPLATE.md)
+6. [HOTFIX_TEMPLATE.md](./templates/HOTFIX_TEMPLATE.md)
 
 ## 使用示例
 
 1. [usage_examples.md](./usage/usage_examples.md)
 2. 特性目录：`spec/features/<feature-name>/`
+3. 问题记录：`spec/questions/<date>-<topic>.md`
 
-## 特性目录约定
+## 文档目录约定
 
-1. `L1` 主文档保存在 `spec/features/<feature-name>/plan.md`、`spec/features/<feature-name>/spec.md`、`spec/features/<feature-name>/tasks.md`
-2. `L2` 变更记录保存在 `spec/features/<feature-name>/smallchange/<date>-<change-name>.md`
-3. `L3` 热修复记录保存在 `spec/features/<feature-name>/hotfix/<date>-<hotfix-name>.md`
-4. 创建 feature 目录时，同步建立 `smallchange/` 与 `hotfix/` 子目录
+1. `L0` 问题记录保存在 `spec/questions/<date>-<topic>.md`
+2. `L1` 主文档保存在 `spec/features/<feature-name>/plan.md`、`spec/features/<feature-name>/spec.md`、`spec/features/<feature-name>/tasks.md`
+3. `L2` 变更记录保存在 `spec/features/<feature-name>/smallchange/<date>-<change-name>.md`
+4. `L3` 热修复记录保存在 `spec/features/<feature-name>/hotfix/<date>-<hotfix-name>.md`
+5. 创建 feature 目录时，同步建立 `smallchange/` 与 `hotfix/` 子目录
 
 ## 导航规则
 
 1. 先阅读本索引。
-2. 再定位到相关特性目录。
-3. L1 先读 `plan.md`。
-4. 编写任务或代码前先读 `spec.md`。
-5. 编码前读取 `tasks.md` 或变更任务说明。
+2. 如果是问题分析，先检查 `spec/questions/` 下是否已有相关记录。
+3. 如果是变更请求，再定位到相关特性目录。
+4. L1 先读 `plan.md`。
+5. 编写任务或代码前先读 `spec.md`。
+6. 编码前读取 `tasks.md` 或变更任务说明。
 """,
         "spec/SPEC_CONTEXT.md": """# SPEC_CONTEXT
 
@@ -213,13 +225,21 @@ Context -> Plan -> Spec -> Tasks -> Code
 
 ## 分级决策顺序
 
-1. 先识别 `Requested Level` 是否被显式指定。
-2. 再判断是否命中外部契约变更。
-3. 再判断是否属于生产故障或安全紧急修复。
-4. 再判断是否存在可复用的既有 feature spec。
-5. 最后确定 `Change Type` 与 `Doc Mode`。
+1. 先识别该请求是否只是问题、分析、排查、解释或方案比较。
+2. 再识别 `Requested Level` 是否被显式指定。
+3. 再判断是否命中外部契约变更。
+4. 再判断是否属于生产故障或安全紧急修复。
+5. 再判断是否存在可复用的既有 feature spec。
+6. 最后确定 `Change Type` 与 `Doc Mode`。
 
 ## 变更分级
+
+### L0 Question
+
+- Workflow: `Context -> Investigation -> Answer`
+- Doc Mode: `QUESTION_RECORD`
+- 适用：问题澄清、代码阅读结论、原因分析、方案比较、只读调研、是否值得做需求的前置判断
+- 强制门禁：必须先在 `spec/questions/` 下生成实体 `<date>-<topic>.md` 记录分析结论；若后续转为实现，仍需等待用户确认并按 L1/L2/L3 重新分级
 
 ### L1 Feature Change
 
@@ -247,16 +267,19 @@ Context -> Plan -> Spec -> Tasks -> Code
 - 若涉及 API、数据库 schema、消息体、文件格式、权限边界等外部契约变化，必须升级为 `L1 + FULL_SPEC`。
 - 若相关 feature 不存在 `spec.md` 或基础规格记录，不得直接走 L2，必须升级为 `L1 + FULL_SPEC`。
 - 若 hotfix 已超出最小安全补丁，必须升级为 `L2` 或 `L1`。
+- 若问题分析过程中出现明确实现请求、接口调整或行为变更，必须从 `L0` 升级到 `L1/L2/L3`。
 - 若实现改变了既有行为，必须同步回写规格文档。
 
 ## Human Gate Rules
 
+- `L0`: after `Answer` if implementation should continue
 - `L1`: after `Plan`, `Spec`, `Tasks`
 - `L2`: after `Tasks`
 - `L3`: after `Patch Proposal`
 
 ## 文档先行规则
 
+- `L0`: 先落地 `spec/questions/<date>-<topic>.md`
 - `L1`: 先创建 `spec/features/<feature-name>/`，再落地 `plan.md`、`spec.md`、`tasks.md`
 - `L2`: 先确认相关 feature 目录存在，再落地 `spec/features/<feature-name>/smallchange/<date>-<change-name>.md`
 - `L3`: 先确认相关 feature 目录存在，再落地 `spec/features/<feature-name>/hotfix/<date>-<hotfix-name>.md`
@@ -265,6 +288,7 @@ Context -> Plan -> Spec -> Tasks -> Code
 ## Prompt 路由
 
 - 分级判断：`spec/prompts/change_classifier.prompt.md`
+- L0 答复生成：`spec/prompts/generate_question_answer.prompt.md`
 - L1 任务生成：`spec/prompts/generate_feature_tasks.prompt.md`
 - L2 任务生成：`spec/prompts/generate_change_tasks.prompt.md`
 """,
@@ -272,9 +296,15 @@ Context -> Plan -> Spec -> Tasks -> Code
 
 ## 分类三轴
 
-1. Workflow Level：`L1 | L2 | L3`
-2. Change Type：`FEATURE | SMALL_CHANGE | BUG_FIX`
-3. Doc Mode：`FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD`
+1. Workflow Level：`L0 | L1 | L2 | L3`
+2. Change Type：`QUESTION | FEATURE | SMALL_CHANGE | BUG_FIX`
+3. Doc Mode：`QUESTION_RECORD | FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD`
+
+## L0 问题分析约束
+
+1. 仅适用于问题澄清、原因分析、代码阅读、只读调研、方案比较和需求前置判断。
+2. 文档沉淀使用 `QUESTION_RECORD`，写入 `spec/questions/<date>-<topic>.md`。
+3. 若分析过程中已经明确进入实现设计、接口调整或行为变更，必须升级到 `L1`、`L2` 或 `L3`。
 
 ## 外部契约变更
 
@@ -306,11 +336,98 @@ Context -> Plan -> Spec -> Tasks -> Code
 
 ## 文档执行门禁
 
-1. `L1` 必须先创建 `spec/features/<feature-name>/`，并在其中保存 `plan.md`、`spec.md`、`tasks.md`。
-2. `L2` 必须先在 `spec/features/<feature-name>/smallchange/` 下生成并保存实体 `<date>-<change-name>.md`。
-3. `L3` 必须先在 `spec/features/<feature-name>/hotfix/` 下生成并保存实体 `<date>-<hotfix-name>.md`。
-4. 上述文档未落地前，不得编码，也不得执行会推进实现的命令。
-5. 文档落地后，仍必须等待用户确认，并由用户手动明确继续。
+1. `L0` 必须先在 `spec/questions/` 下生成并保存实体 `<date>-<topic>.md`。
+2. `L1` 必须先创建 `spec/features/<feature-name>/`，并在其中保存 `plan.md`、`spec.md`、`tasks.md`。
+3. `L2` 必须先在 `spec/features/<feature-name>/smallchange/` 下生成并保存实体 `<date>-<change-name>.md`。
+4. `L3` 必须先在 `spec/features/<feature-name>/hotfix/` 下生成并保存实体 `<date>-<hotfix-name>.md`。
+5. 上述文档未落地前，不得编码，也不得执行会推进实现的命令。
+6. 文档落地后，若后续要推进实现，仍必须等待用户确认，并由用户手动明确继续。
+""",
+        "spec/templates/QUESTION_TEMPLATE.md": """# Question: <topic>
+
+## Classification
+
+Requested Level: AUTO | L0 | L1 | L2 | L3
+Final Level: L0
+Change Type: QUESTION
+Doc Mode: QUESTION_RECORD
+Workflow: Context -> Investigation -> Answer
+Human Gate: 先生成并保存 `spec/questions/<date>-<topic>.md`；若后续转实现，待用户确认并手动明确继续后再按 L1/L2/L3 重分级
+
+## Preconditions
+
+- 当前目标是澄清问题、分析现状、比较方案或给出建议
+- 尚未请求直接修改实现或推进实现的命令
+- 若分析结论转为明确变更需求，升级为 `L1`、`L2` 或 `L3`
+
+## 问题陈述
+
+描述当前问题、疑问或需要判断的事项。
+
+## 已知上下文
+
+- 相关模块：
+- 已知事实：
+- 未知点：
+
+## Investigation
+
+1. ...
+2. ...
+3. ...
+
+## Answer
+
+- 结论：
+- 依据：
+- 建议下一步：
+
+## Escalation Triggers
+
+- 哪些信号会让该问题升级为 L1 / L2 / L3：
+""",
+        "spec/templates/QUESTION_TEMPLATE.md": """# Question: <topic>
+
+## Classification
+
+Requested Level: AUTO | L0 | L1 | L2 | L3
+Final Level: L0
+Change Type: QUESTION
+Doc Mode: QUESTION_RECORD
+Workflow: Context -> Investigation -> Answer
+Human Gate: Save `spec/questions/<date>-<topic>.md` first; if implementation should follow, wait for user confirmation and then reclassify into `L1`, `L2`, or `L3`
+
+## Preconditions
+
+- The current goal is clarification, analysis, investigation, or recommendation
+- No direct implementation change has been requested yet
+- If the result becomes a concrete change request, escalate to `L1`, `L2`, or `L3`
+
+## Question
+
+Describe the question, uncertainty, or decision to make.
+
+## Known Context
+
+- Relevant modules:
+- Known facts:
+- Unknowns:
+
+## Investigation
+
+1. ...
+2. ...
+3. ...
+
+## Answer
+
+- Conclusion:
+- Evidence:
+- Recommended next step:
+
+## Escalation Triggers
+
+- Signals that should upgrade this record to L1 / L2 / L3:
 """,
         "spec/templates/PLAN_TEMPLATE.md": """# Plan: <feature-name>
 
@@ -411,7 +528,7 @@ Doc Mode: FULL_SPEC
 
 ## Classification
 
-Requested Level: AUTO | L1 | L2 | L3
+Requested Level: AUTO | L0 | L1 | L2 | L3
 Final Level: L2
 Change Type: SMALL_CHANGE | BUG_FIX
 Doc Mode: CHANGE_RECORD
@@ -457,7 +574,7 @@ Out of scope:
 
 ## Classification
 
-Requested Level: AUTO | L1 | L2 | L3
+Requested Level: AUTO | L0 | L1 | L2 | L3
 Final Level: L3
 Change Type: BUG_FIX
 Doc Mode: HOTFIX_RECORD
@@ -493,6 +610,7 @@ Human Gate: 先生成并保存 `spec/features/<feature-name>/hotfix/<date>-<hotf
 - ...
 """,
         "spec/features/.gitkeep": "",
+        "spec/questions/.gitkeep": "",
     },
     "en": {
         "AGENTS.md": """Always respond in English
@@ -515,11 +633,11 @@ INIT -> ANALYSIS -> EXECUTION -> COMPLETED | FAILED | ABORTED
 
 Before planning, task generation, or coding, classify the request on three axes and output exactly:
 
-Requested Level: AUTO | L1 | L2 | L3
-Final Level: L1 | L2 | L3
-Change Type: FEATURE | SMALL_CHANGE | BUG_FIX
-Doc Mode: FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD
-Workflow: Context -> Plan -> Spec -> Tasks -> Code | Tasks -> Code | Patch Proposal -> Code
+Requested Level: AUTO | L0 | L1 | L2 | L3
+Final Level: L0 | L1 | L2 | L3
+Change Type: QUESTION | FEATURE | SMALL_CHANGE | BUG_FIX
+Doc Mode: QUESTION_RECORD | FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD
+Workflow: Context -> Investigation -> Answer | Context -> Plan -> Spec -> Tasks -> Code | Tasks -> Code | Patch Proposal -> Code
 Human Gate:
 Reason:
 Scope Signals:
@@ -529,19 +647,25 @@ Escalation Note:
 
 Default workflow: Context -> Plan -> Spec -> Tasks -> Code
 
+L0 (Question): Context -> Investigation -> Answer
 L1 (Feature): Context -> Plan -> Spec -> Tasks -> Code
 L2 (Small Change): Tasks -> Code
 L3 (Hotfix): Patch Proposal -> Code
 
 ## Hard Rules
 
-1. External contract changes must be at least `L1`, and `Doc Mode` must be `FULL_SPEC`.
-2. `L2` requires an existing feature spec; if none exists, escalate to `L1`.
-3. `L3` is only for the smallest safe patch; if scope expands, escalate to `L2` or `L1`.
-4. User- or developer-requested levels may raise conservatism, but may not bypass hard rules.
-5. `L1` / `L2` / `L3` must all produce concrete `.md` documents first, and code or implementation-driving commands may continue only after user confirmation and a manual go-ahead.
+1. If the request is explanation, analysis, investigation, or option comparison without a direct implementation ask, prefer `L0 + QUESTION_RECORD`.
+2. External contract changes must be at least `L1`, and `Doc Mode` must be `FULL_SPEC`.
+3. `L2` requires an existing feature spec; if none exists, escalate to `L1`.
+4. `L3` is only for the smallest safe patch; if scope expands, escalate to `L2` or `L1`.
+5. User- or developer-requested levels may raise conservatism, but may not bypass hard rules.
+6. `L0` / `L1` / `L2` / `L3` must all produce concrete `.md` documents first, and code or implementation-driving commands may continue only after user confirmation and a manual go-ahead.
 
 ## Human Gates
+
+L0 requires approval after:
+
+1. Answer (only if implementation should continue)
 
 L1 requires approval after:
 
@@ -571,42 +695,47 @@ Do not implement code, or run implementation-driving commands, before classifica
 
 ## Agent Entry
 
-Agents should enter the spec tree from this file, then locate the relevant feature under `spec/features/<feature-name>/`.
+Agents should enter the spec tree from this file, then route either to `spec/questions/` or the relevant feature under `spec/features/<feature-name>/`.
 
 ## Prompt Sources
 
 1. [spec_bootstrap_prompt_v6.md](./prompts/spec_bootstrap_prompt_v6.md)
 2. [change_classifier.prompt.md](./prompts/change_classifier.prompt.md)
-3. [generate_feature_tasks.prompt.md](./prompts/generate_feature_tasks.prompt.md)
-4. [generate_change_tasks.prompt.md](./prompts/generate_change_tasks.prompt.md)
+3. [generate_question_answer.prompt.md](./prompts/generate_question_answer.prompt.md)
+4. [generate_feature_tasks.prompt.md](./prompts/generate_feature_tasks.prompt.md)
+5. [generate_change_tasks.prompt.md](./prompts/generate_change_tasks.prompt.md)
 
 ## Templates
 
 1. [PLAN_TEMPLATE.md](./templates/PLAN_TEMPLATE.md)
 2. [SPEC_TEMPLATE.md](./templates/SPEC_TEMPLATE.md)
-3. [TASK_TEMPLATE.md](./templates/TASK_TEMPLATE.md)
-4. [CHANGE_TEMPLATE.md](./templates/CHANGE_TEMPLATE.md)
-5. [HOTFIX_TEMPLATE.md](./templates/HOTFIX_TEMPLATE.md)
+3. [QUESTION_TEMPLATE.md](./templates/QUESTION_TEMPLATE.md)
+4. [TASK_TEMPLATE.md](./templates/TASK_TEMPLATE.md)
+5. [CHANGE_TEMPLATE.md](./templates/CHANGE_TEMPLATE.md)
+6. [HOTFIX_TEMPLATE.md](./templates/HOTFIX_TEMPLATE.md)
 
 ## Usage
 
 1. [usage_examples.md](./usage/usage_examples.md)
 2. Features path: `spec/features/<feature-name>/`
+3. Question records: `spec/questions/<date>-<topic>.md`
 
-## Feature Layout
+## Document Layout
 
-1. `L1` primary docs live in `spec/features/<feature-name>/plan.md`, `spec/features/<feature-name>/spec.md`, and `spec/features/<feature-name>/tasks.md`
-2. `L2` change records live in `spec/features/<feature-name>/smallchange/<date>-<change-name>.md`
-3. `L3` hotfix records live in `spec/features/<feature-name>/hotfix/<date>-<hotfix-name>.md`
-4. When a feature folder is created, create `smallchange/` and `hotfix/` under it as well
+1. `L0` question records live in `spec/questions/<date>-<topic>.md`
+2. `L1` primary docs live in `spec/features/<feature-name>/plan.md`, `spec/features/<feature-name>/spec.md`, and `spec/features/<feature-name>/tasks.md`
+3. `L2` change records live in `spec/features/<feature-name>/smallchange/<date>-<change-name>.md`
+4. `L3` hotfix records live in `spec/features/<feature-name>/hotfix/<date>-<hotfix-name>.md`
+5. When a feature folder is created, create `smallchange/` and `hotfix/` under it as well
 
 ## Navigation
 
 1. Read this index first.
-2. Locate the relevant feature folder.
-3. Read `plan.md` for L1 changes.
-4. Read `spec.md` before generating tasks or code.
-5. Read `tasks.md` or change-level task notes before coding.
+2. If the request is analysis-only, check `spec/questions/` first.
+3. Otherwise locate the relevant feature folder.
+4. Read `plan.md` for L1 changes.
+5. Read `spec.md` before generating tasks or code.
+6. Read `tasks.md` or change-level task notes before coding.
 """,
         "spec/SPEC_CONTEXT.md": """# SPEC_CONTEXT
 
@@ -642,13 +771,21 @@ Context -> Plan -> Spec -> Tasks -> Code
 
 ## Classification Order
 
-1. Check whether `Requested Level` was explicitly specified.
-2. Check whether the request changes an external contract.
-3. Check whether the work is a production or security hotfix.
-4. Check whether an existing feature spec can be reused.
-5. Then finalize `Change Type` and `Doc Mode`.
+1. Check whether the request is only a question, investigation, explanation, or option comparison.
+2. Check whether `Requested Level` was explicitly specified.
+3. Check whether the request changes an external contract.
+4. Check whether the work is a production or security hotfix.
+5. Check whether an existing feature spec can be reused.
+6. Then finalize `Change Type` and `Doc Mode`.
 
 ## Change Levels
+
+### L0 Question
+
+- Workflow: `Context -> Investigation -> Answer`
+- Doc Mode: `QUESTION_RECORD`
+- Use for: clarification questions, code-reading conclusions, root-cause analysis, option comparison, read-only investigation, or deciding whether a future change is needed
+- Hard gate: generate a concrete record at `spec/questions/<date>-<topic>.md` first; if the request later turns into implementation, wait for user review and reclassify into `L1`, `L2`, or `L3`
 
 ### L1 Feature Change
 
@@ -676,16 +813,19 @@ Context -> Plan -> Spec -> Tasks -> Code
 - If the change affects APIs, database schema, message contracts, file formats, or permission boundaries, it must be `L1 + FULL_SPEC`.
 - If no existing `spec.md` or equivalent baseline spec exists for the feature, do not use `L2`; escalate to `L1 + FULL_SPEC`.
 - If a hotfix grows beyond the smallest safe patch, escalate to `L2` or `L1`.
+- If an investigation request turns into a concrete implementation ask or behavior change, escalate from `L0` to `L1`, `L2`, or `L3`.
 - If implementation changes behavior, update spec artifacts accordingly.
 
 ## Human Gate Rules
 
+- `L0`: approval after `Answer` if implementation should continue
 - `L1`: approval after `Plan`, `Spec`, and `Tasks`
 - `L2`: approval after `Tasks`
 - `L3`: approval after `Patch Proposal`
 
 ## Document-First Rule
 
+- `L0`: save `spec/questions/<date>-<topic>.md` first
 - `L1`: create `spec/features/<feature-name>/` first, then save `plan.md`, `spec.md`, and `tasks.md` there
 - `L2`: confirm the feature folder exists, then save `spec/features/<feature-name>/smallchange/<date>-<change-name>.md`
 - `L3`: confirm the feature folder exists, then save `spec/features/<feature-name>/hotfix/<date>-<hotfix-name>.md`
@@ -694,6 +834,7 @@ Context -> Plan -> Spec -> Tasks -> Code
 ## Prompt Routing
 
 - Level classification: `spec/prompts/change_classifier.prompt.md`
+- L0 answer generation: `spec/prompts/generate_question_answer.prompt.md`
 - L1 tasks: `spec/prompts/generate_feature_tasks.prompt.md`
 - L2 tasks: `spec/prompts/generate_change_tasks.prompt.md`
 """,
@@ -701,9 +842,15 @@ Context -> Plan -> Spec -> Tasks -> Code
 
 ## Classification Axes
 
-1. Workflow Level: `L1 | L2 | L3`
-2. Change Type: `FEATURE | SMALL_CHANGE | BUG_FIX`
-3. Doc Mode: `FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD`
+1. Workflow Level: `L0 | L1 | L2 | L3`
+2. Change Type: `QUESTION | FEATURE | SMALL_CHANGE | BUG_FIX`
+3. Doc Mode: `QUESTION_RECORD | FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD`
+
+## L0 Constraints
+
+1. Use `L0` only for clarification, analysis, code reading, option comparison, read-only investigation, or deciding whether a change is needed.
+2. Documentation uses `QUESTION_RECORD` under `spec/questions/<date>-<topic>.md`.
+3. If the investigation becomes concrete implementation design, behavior change, or contract change, escalate to `L1`, `L2`, or `L3`.
 
 ## External Contract Changes
 
@@ -735,11 +882,12 @@ Any of the following must be classified as `L1 + FULL_SPEC`:
 
 ## Document Execution Gate
 
-1. `L1` must first create `spec/features/<feature-name>/`, then save `plan.md`, `spec.md`, and `tasks.md` inside it.
-2. `L2` must first generate and save a concrete `<date>-<change-name>.md` under `spec/features/<feature-name>/smallchange/`.
-3. `L3` must first generate and save a concrete `<date>-<hotfix-name>.md` under `spec/features/<feature-name>/hotfix/`.
-4. Before those documents exist, do not code and do not run implementation-driving commands.
-5. After the documents exist, still wait for user confirmation and a manual go-ahead.
+1. `L0` must first generate and save a concrete `<date>-<topic>.md` under `spec/questions/`.
+2. `L1` must first create `spec/features/<feature-name>/`, then save `plan.md`, `spec.md`, and `tasks.md` inside it.
+3. `L2` must first generate and save a concrete `<date>-<change-name>.md` under `spec/features/<feature-name>/smallchange/`.
+4. `L3` must first generate and save a concrete `<date>-<hotfix-name>.md` under `spec/features/<feature-name>/hotfix/`.
+5. Before those documents exist, do not code and do not run implementation-driving commands.
+6. After the documents exist, still wait for user confirmation and a manual go-ahead if the work will continue into implementation.
 """,
         "spec/templates/PLAN_TEMPLATE.md": """# Plan: <feature-name>
 
@@ -840,7 +988,7 @@ Describe what this task set solves.
 
 ## Classification
 
-Requested Level: AUTO | L1 | L2 | L3
+Requested Level: AUTO | L0 | L1 | L2 | L3
 Final Level: L2
 Change Type: SMALL_CHANGE | BUG_FIX
 Doc Mode: CHANGE_RECORD
@@ -886,7 +1034,7 @@ Out of scope:
 
 ## Classification
 
-Requested Level: AUTO | L1 | L2 | L3
+Requested Level: AUTO | L0 | L1 | L2 | L3
 Final Level: L3
 Change Type: BUG_FIX
 Doc Mode: HOTFIX_RECORD
