@@ -45,19 +45,19 @@ When information is incomplete, choose the more conservative and slower level.
 
 ## Human Gate Rules
 
-- `L0`: confirmation required after `Answer` only if implementation should continue
-- `L1`: confirmation required after `Plan`, `Spec`, and `Tasks`
+- `L0`: no extra approval; end after `Answer` or escalate and continue
+- `L1`: complete `Plan`, `Spec`, and `Tasks`, then require one confirmation after `Tasks`
 - `L2`: confirmation required after `Tasks`
 - `L3`: confirmation required after `Patch Proposal`
 
 ## Path Rules
 
-- `L0`: `spec/questions/<date>-<topic>.md`
+- `L0`: optionally `spec/questions/<date>-<topic>.md`
 - `L1`: `spec/features/<feature-name>/plan.md`, `spec.md`, `tasks.md`
 - `L2`: `spec/features/<feature-name>/smallchange/<date>-<change-name>.md`
 - `L3`: `spec/features/<feature-name>/hotfix/<date>-<hotfix-name>.md`
 
-If an `L0` investigation turns into a concrete implementation ask, reclassify into `L1`, `L2`, or `L3`.
+If an `L0` investigation turns into a concrete implementation ask, reclassify into `L1`, `L2`, or `L3` and continue.
 
 ## Final Execution Requirement
 

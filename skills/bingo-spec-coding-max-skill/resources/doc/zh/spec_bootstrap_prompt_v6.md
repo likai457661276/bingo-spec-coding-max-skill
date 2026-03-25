@@ -24,12 +24,13 @@ Escalation Note:
 - 外部契约变更必须是 `L1 + FULL_SPEC`
 - 没有既有 feature spec 时不得直接走 `L2`
 - `L3` 仅用于最小安全补丁
-- 所有级别在进入实现前都必须先落地实体 `.md` 文档
+- `L1`、`L2`、`L3` 在进入实现前都必须先落地实体 `.md` 文档
+- `L0` 不强制落问题文档；若分析后已明确需要实现，可直接升级到 `L1`、`L2` 或 `L3`
 
 ## STEP 1 - 人类门禁
 
-- `L0`：仅当后续要进入实现时，在 `Answer` 后确认
-- `L1`：在 `Plan`、`Spec`、`Tasks` 后确认
+- `L0`：无需额外确认；可在 `Answer` 后结束，或直接升级并继续推进
+- `L1`：先完成 `Plan`、`Spec`、`Tasks`，仅在 `Tasks` 后确认一次
 - `L2`：在 `Tasks` 后确认
 - `L3`：在 `Patch Proposal` 后确认
 
@@ -58,7 +59,7 @@ AGENTS.md
 
 ## STEP 4 - 路径约定
 
-- `L0`：`spec/questions/<date>-<topic>.md`
+- `L0`：如需沉淀分析记录，可写入 `spec/questions/<date>-<topic>.md`
 - `L1`：`spec/features/<feature-name>/plan.md`、`spec.md`、`tasks.md`
 - `L2`：`spec/features/<feature-name>/smallchange/<date>-<change-name>.md`
 - `L3`：`spec/features/<feature-name>/hotfix/<date>-<hotfix-name>.md`

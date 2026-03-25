@@ -259,6 +259,21 @@ dependencies = [
             self.assertIn("Source roots: src", context_content)
             self.assertIn("Suggested test commands: npm test", context_content)
 
+    def test_generated_agents_uses_single_l1_human_gate(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project_root = Path(tmpdir)
+            self.create_source_docs(project_root)
+
+            result = self.run_script(project_root, "--apply")
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+            agents_content = (project_root / "AGENTS.md").read_text(encoding="utf-8")
+
+            self.assertIn("完成 `Plan`、`Spec`、`Tasks`", agents_content)
+            self.assertIn("在 `Tasks` 后统一确认一次", agents_content)
+            self.assertNotIn("1. Plan\n2. Spec\n3. Tasks", agents_content)
+
     def test_default_language_is_chinese_and_uses_localized_docs(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             project_root = Path(tmpdir)
@@ -301,10 +316,15 @@ dependencies = [
             self.assertIn("Requested Level: AUTO | L0 | L1 | L2 | L3", agents_content)
             self.assertIn("Doc Mode: QUESTION_RECORD | FULL_SPEC | CHANGE_RECORD | HOTFIX_RECORD", agents_content)
             self.assertIn("外部契约变更至少为 L1", agents_content)
-            self.assertIn("都必须先生成实体 `.md` 文档", agents_content)
+            self.assertIn("`L1` / `L2` / `L3` 都必须先生成实体 `.md` 文档", agents_content)
+            self.assertIn("`L0` 不强制落 `QUESTION_RECORD`", agents_content)
             self.assertIn("L0（Question）", agents_content)
+            self.assertIn("必须先读取 `spec/INDEX.md`", agents_content)
+            self.assertIn("`spec/INDEX.md` 是规格树唯一导航入口", agents_content)
 
             self.assertIn("文档目录约定", index_content)
+            self.assertIn("与 AGENTS.md 的挂接", index_content)
+            self.assertIn("本文件负责把 `AGENTS.md` 的分级结果映射到具体 spec 路径与文档集合", index_content)
             self.assertIn("spec/questions/<date>-<topic>.md", index_content)
             self.assertIn("spec/features/<feature-name>/smallchange/<date>-<change-name>.md", index_content)
             self.assertIn("spec/features/<feature-name>/hotfix/<date>-<hotfix-name>.md", index_content)
@@ -315,6 +335,8 @@ dependencies = [
             self.assertIn("Doc Mode: `HOTFIX_RECORD`", workflow_content)
             self.assertIn("文档先行规则", workflow_content)
             self.assertIn("由用户手动明确继续", workflow_content)
+            self.assertIn("可选落地 `spec/questions/<date>-<topic>.md`", workflow_content)
+            self.assertIn("完成 `Plan`、`Spec`、`Tasks` 后，仅在 `Tasks` 后确认一次", workflow_content)
             self.assertIn("spec/questions/<date>-<topic>.md", workflow_content)
             self.assertIn("spec/features/<feature-name>/smallchange/", workflow_content)
             self.assertIn("spec/features/<feature-name>/hotfix/", workflow_content)
@@ -325,12 +347,14 @@ dependencies = [
             self.assertIn("若无既有 spec，不得直接走 `L2`", policy_content)
             self.assertIn("文档执行门禁", policy_content)
             self.assertIn("不得执行会推进实现的命令", policy_content)
+            self.assertIn("但不作为实现门禁", policy_content)
             self.assertIn("spec/questions/<date>-<topic>.md", policy_content)
             self.assertIn("spec/features/<feature-name>/smallchange/", policy_content)
             self.assertIn("spec/features/<feature-name>/hotfix/", policy_content)
 
             self.assertIn("Doc Mode: QUESTION_RECORD", question_template)
             self.assertIn("spec/questions/<date>-<topic>.md", question_template)
+            self.assertIn("本模板仅在需要沉淀分析记录时使用", question_template)
             self.assertIn("Doc Mode: CHANGE_RECORD", change_template)
             self.assertIn("升级为 `L1 + FULL_SPEC`", change_template)
             self.assertIn("spec/features/<feature-name>/smallchange/<date>-<change-name>.md", change_template)
@@ -418,12 +442,18 @@ dependencies = [
 
             self.assertIn("Always respond in English", agents_content)
             self.assertIn("Default workflow:", agents_content)
+            self.assertIn("must read `spec/INDEX.md`", agents_content)
             self.assertEqual(prompt_content, "# EN bootstrap\n")
             self.assertIn("language=en", lock_content)
 
             context_content = (project_root / "spec/SPEC_CONTEXT.md").read_text(encoding="utf-8")
+            index_content = (project_root / "spec/INDEX.md").read_text(encoding="utf-8")
+            workflow_content = (project_root / "spec/SPEC_WORKFLOW.md").read_text(encoding="utf-8")
             self.assertIn("## Repository Summary", context_content)
             self.assertIn("Auto-context note:", context_content)
+            self.assertIn("## Binding To AGENTS.md", index_content)
+            self.assertIn("maps the classification result from `AGENTS.md` to the concrete spec path", index_content)
+            self.assertIn("complete `Plan`, `Spec`, and `Tasks`, then approve once after `Tasks`", workflow_content)
 
     def test_upgrade_reinitializes_existing_project_outputs(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

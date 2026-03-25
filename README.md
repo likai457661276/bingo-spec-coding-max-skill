@@ -81,6 +81,7 @@ After initialization, the target repository should have:
 
 - a project-level `AGENTS.md`
 - a single entrypoint at `spec/INDEX.md`
+- an explicit binding from `AGENTS.md` into the spec tree through `spec/INDEX.md`
 - reusable templates and prompts
 - explicit request classification and human-gate rules
 
@@ -127,7 +128,8 @@ Hard rules:
 - do not use `L2` unless a reusable feature spec already exists
 - `L3` is only for the smallest safe patch
 - explicitly requested levels may raise conservatism, but may not bypass hard rules
-- `L0 / L1 / L2 / L3` must all generate concrete `.md` documents first, and coding or implementation-driving commands may continue only after user confirmation and a manual go-ahead
+- `L1 / L2 / L3` must generate concrete `.md` documents first, and coding or implementation-driving commands may continue only after user confirmation and a manual go-ahead
+- `L0` does not require a question document first; if analysis makes implementation clearly necessary, it may escalate directly to `L1`, `L2`, or `L3`
 
 Default mapping:
 
@@ -138,36 +140,27 @@ Default mapping:
 
 ## Human Gates
 
-This project explicitly requires human confirmation at defined checkpoints. AI must not classify a change and continue all the way to code commit without stopping at the required stage.
-More strictly, all four levels must first materialize the required `.md` document(s), then wait for user review and a manual go-ahead.
+This project explicitly requires human confirmation at defined checkpoints for `L1`, `L2`, and `L3`. AI must not classify those changes and continue all the way to code commit without stopping at the required stage.
+`L0` does not have an extra human gate. It may end after analysis, or escalate and continue when implementation is clearly needed.
 
 ### Human Checkpoints for L0
 
-`L0` usually stops at analysis instead of implementation.
+`L0` is for clarification, investigation, explanation, or option comparison without making the question record itself a hard gate.
 
-Confirmation is needed as follows:
+Execution is:
 
-- if the work stays as clarification, investigation, explanation, or option comparison, finish the `Answer` record first
-- if the result should move into implementation, confirm the analysis result first and then reclassify into `L1`, `L2`, or `L3`
-
-Recommended readiness:
-
-- `spec/questions/<date>-<topic>.md` exists as a concrete file
-- the conclusion, evidence, and suggested next step are written down
-- if implementation should continue, the user has explicitly asked to continue and the request has been reclassified
+- if the work stays analysis-only, finish the `Answer` and stop there
+- if the result should move into implementation, reclassify directly into `L1`, `L2`, or `L3`
+- if a durable record is useful, optionally save `spec/questions/<date>-<topic>.md`
 
 ### Human Checkpoints for L1
 
-Three checkpoints are mandatory:
+One checkpoint is mandatory:
 
-- confirm after `Plan`: direction, boundaries, and impact
-- confirm after `Spec`: requirements, constraints, and acceptance criteria
-- confirm after `Tasks`: implementation order, task granularity, and test scope
+- confirm after `Tasks`: by this point `Plan`, `Spec`, and `Tasks` must all exist, and the user confirms direction, requirements, constraints, acceptance criteria, implementation order, task granularity, and test scope in one pass
 
 Coding may start only when:
 
-- `Plan` is confirmed
-- `Spec` is confirmed
 - `Tasks` is confirmed
 - `spec/features/<feature-name>/plan.md`, `spec/features/<feature-name>/spec.md`, and `spec/features/<feature-name>/tasks.md` exist as concrete files
 - the user has manually told the agent to continue
@@ -626,7 +619,7 @@ Where:
 - `spec/templates/HOTFIX_TEMPLATE.md` is used for `L3`
 - `spec/questions/` stores question-analysis and read-only investigation records
 - `spec/features/` is the root directory for future feature specs and change history
-- `L0` docs live under `spec/questions/`
+- `L0` records, when kept, live under `spec/questions/`
 - `L1` docs live under `spec/features/<feature-name>/`
 - `L2` history lives under `spec/features/<feature-name>/smallchange/`
 - `L3` history lives under `spec/features/<feature-name>/hotfix/`
@@ -657,17 +650,17 @@ Final Level: L0
 Change Type: QUESTION
 Doc Mode: QUESTION_RECORD
 Workflow: Context -> Investigation -> Answer
-Human Gate: Confirm after Answer only if implementation should continue
+Human Gate: None; if implementation is clearly needed after analysis, escalate to L1, L2, or L3 and continue
 Reason: The current goal is analysis and explanation, not implementation, so the request should stay on the L0 question flow first.
 Scope Signals: Read-only investigation; compare multiple possible causes; no implementation change requested yet
 Escalation Note: If the investigation turns into authentication-flow changes, interface behavior changes, or a concrete patch, escalate to L1, L2, or L3
 ```
 
-Where the document goes:
+If you want to keep an analysis record, the document goes here:
 
 - `spec/questions/2026-03-09-why-login-fails.md`
 
-1. `L1`: add a login feature. Finish `Plan -> Spec -> Tasks`, wait for confirmation at each stage, then start coding.
+1. `L1`: add a login feature. Finish `Plan -> Spec -> Tasks`, confirm once after `Tasks`, then start coding.
 2. `L2`: fix password validation. Generate change tasks first, confirm them, then start coding.
 3. `L3`: fix a production token failure. Propose the minimal patch first, confirm it, then start coding.
 

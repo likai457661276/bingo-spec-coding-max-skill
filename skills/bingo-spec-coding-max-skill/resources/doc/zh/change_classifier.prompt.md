@@ -45,19 +45,19 @@ Escalation Note:
 
 ## Human Gate 规则
 
-- `L0`：仅当后续要进入实现时，在 `Answer` 后确认
-- `L1`：在 `Plan`、`Spec`、`Tasks` 后确认
+- `L0`：无需额外确认；可在 `Answer` 后结束，或直接升级并继续推进
+- `L1`：先完成 `Plan`、`Spec`、`Tasks`，仅在 `Tasks` 后确认一次
 - `L2`：在 `Tasks` 后确认
 - `L3`：在 `Patch Proposal` 后确认
 
 ## 路径规则
 
-- `L0`：`spec/questions/<date>-<topic>.md`
+- `L0`：如需沉淀分析记录，可写入 `spec/questions/<date>-<topic>.md`
 - `L1`：`spec/features/<feature-name>/plan.md`、`spec.md`、`tasks.md`
 - `L2`：`spec/features/<feature-name>/smallchange/<date>-<change-name>.md`
 - `L3`：`spec/features/<feature-name>/hotfix/<date>-<hotfix-name>.md`
 
-如果 `L0` 分析在过程中转成明确实现请求，必须重新分级到 `L1`、`L2` 或 `L3`。
+如果 `L0` 分析在过程中转成明确实现请求，应直接重新分级到 `L1`、`L2` 或 `L3` 并继续推进。
 
 ## 最终执行要求
 

@@ -8,10 +8,10 @@ Final Level: L0
 Change Type: QUESTION
 Doc Mode: QUESTION_RECORD
 Workflow: Context -> Investigation -> Answer
-Human Gate: 仅当后续要进入实现时，在 Answer 后确认
+Human Gate: 无；如分析后已明确需要实现，可直接升级到 L1、L2 或 L3 并继续推进
 Reason: 用户当前先要诊断和解释，不是直接要求改实现。
 Scope Signals: 只读分析；比较可能原因；未要求直接改代码
-Escalation Note: 如果后续转为实现工作，重新分级到 L1、L2 或 L3
+Escalation Note: 如果后续转为实现工作，直接重新分级到 L1、L2 或 L3 并继续推进
 ```
 
 ## 示例 1 - 新增登录功能
@@ -22,7 +22,7 @@ Final Level: L1
 Change Type: FEATURE
 Doc Mode: FULL_SPEC
 Workflow: Context -> Plan -> Spec -> Tasks -> Code
-Human Gate: Confirm after Plan, Spec, and Tasks
+Human Gate: Complete Plan, Spec, and Tasks, then confirm once after Tasks
 Reason: 请求包含新功能、新接口和新增认证流程，命中了外部契约新增，因此必须走 L1；该功能尚未有可复用 spec，因此文档模式必须为 FULL_SPEC。
 Scope Signals: 新增登录页面；新增认证接口；新增 JWT 签发流程；前端与调用方接口行为会变化
 Escalation Note: None

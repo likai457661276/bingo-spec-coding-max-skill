@@ -1,6 +1,6 @@
 # 问题答复生成器
 
-为 `L0` 请求生成 `QUESTION_RECORD` 文档。
+为 `L0` 请求生成可选的 `QUESTION_RECORD` 文档。
 
 仅当当前请求属于问题澄清、原因分析、代码阅读、方案比较或只读调研，且尚未要求直接修改实现时使用本流程。
 
@@ -16,11 +16,11 @@
 - 已知事实与未知点要分开写
 - 必须给出明确结论或建议
 - 明确哪些信号会把当前工作升级为 `L1`、`L2` 或 `L3`
-- 未重新分级前，不得输出推进实现的执行步骤
+- 如果分析已经明确需要进入实现，可直接重新分级并继续推进
 
 ## Output Path
 
-- 保存到 `spec/questions/<date>-<topic>.md`
+- 如需保存，写入 `spec/questions/<date>-<topic>.md`
 
 ## Output Structure
 
@@ -34,7 +34,7 @@ Final Level: L0
 Change Type: QUESTION
 Doc Mode: QUESTION_RECORD
 Workflow: Context -> Investigation -> Answer
-Human Gate: 先保存 `spec/questions/<date>-<topic>.md`；若后续要进入实现，需升级为 `L1`、`L2` 或 `L3`
+Human Gate: 无；若分析后已明确需要进入实现，可直接升级为 `L1`、`L2` 或 `L3` 并继续推进
 
 ## Question
 

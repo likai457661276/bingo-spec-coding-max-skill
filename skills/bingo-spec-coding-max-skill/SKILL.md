@@ -34,7 +34,7 @@ dry-run 预览应覆盖：
 
 初始化后的需求文档约定：
 
-- `L0` 文档写入 `spec/questions/<date>-<topic>.md`
+- `L0` 如需保留问题记录，可写入 `spec/questions/<date>-<topic>.md`
 - `L1` 文档写入 `spec/features/<feature-name>/`
 - `L2` 文档写入 `spec/features/<feature-name>/smallchange/`
 - `L3` 文档写入 `spec/features/<feature-name>/hotfix/`

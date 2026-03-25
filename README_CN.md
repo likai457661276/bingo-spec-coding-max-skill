@@ -70,6 +70,7 @@
 
 - 一个项目级 `AGENTS.md`
 - 一个统一入口 `spec/INDEX.md`
+- `AGENTS.md` 通过 `spec/INDEX.md` 显式挂接到规格树入口
 - 一组可复用的模板与 prompts
 - 一套明确的请求分级和人类门禁规则
 
@@ -116,7 +117,8 @@ Escalation Note:
 - 没有既有 feature spec，不允许直接走 `L2`
 - `L3` 只能用于最小安全补丁
 - 用户或开发者显式指定等级只能上调，不能绕过硬规则降级
-- `L0 / L1 / L2 / L3` 都必须先生成实体 `.md` 文档，待用户确认并手动明确继续后，才能进入编码或执行推进实现的命令
+- `L1 / L2 / L3` 都必须先生成实体 `.md` 文档，待用户确认并手动明确继续后，才能进入编码或执行推进实现的命令
+- `L0` 不强制落问题文档；如果分析后已明确需要实现，可直接升级到 `L1`、`L2` 或 `L3` 继续推进
 
 默认映射关系：
 
@@ -127,36 +129,27 @@ Escalation Note:
 
 ## 人类门禁
 
-本项目明确要求：AI 不能只靠分级自动一路执行到代码提交，不同等级必须在不同阶段暂停，等待人类确认。
-更严格地说，四种等级都必须先把对应的实体 `.md` 文档落地，再等待用户确认并手动明确继续。
+本项目明确要求：`L1`、`L2`、`L3` 不能只靠分级自动一路执行到代码提交，不同等级必须在不同阶段暂停，等待人类确认。
+`L0` 不要求额外人类门禁；它完成分析后可以直接结束，也可以在需要时直接升级并继续推进实现。
 
 ### L0 的人类介入时机
 
-通常 `L0` 不直接进入实现，因此它的目标是先把分析结论沉淀下来。
+`L0` 的目标是先完成澄清、排查、解释或方案比较，不再把“先落问题文档”当作强制门禁。
 
-需要确认的情况：
+执行方式：
 
-- 如果 `L0` 只停留在分析、解释、排查、方案比较，可以先完成 `Answer`
-- 如果 `L0` 分析后要继续推进实现，则必须先确认分析结论，再升级为 `L1`、`L2` 或 `L3`
-
-建议落地前提：
-
-- `spec/questions/<date>-<topic>.md` 已实际生成
-- 结论、依据和下一步建议已经写清楚
-- 如果要进入实现，用户已明确要求继续，且已重新完成分级
+- 如果 `L0` 只停留在分析、解释、排查、方案比较，可以完成 `Answer` 后直接结束
+- 如果 `L0` 分析后已明确需要推进实现，可直接升级为 `L1`、`L2` 或 `L3`
+- 如需保留分析痕迹，可选写入 `spec/questions/<date>-<topic>.md`
 
 ### L1 的人类介入时机
 
-必须介入 3 次：
+必须介入 1 次：
 
-- `Plan` 完成后确认：确认方向、边界、影响范围
-- `Spec` 完成后确认：确认需求、约束、验收标准
-- `Tasks` 完成后确认：确认实施顺序、拆分粒度、测试范围
+- `Tasks` 完成后确认：此时 `Plan`、`Spec`、`Tasks` 已完整落地，一次性确认方向、需求约束、验收标准、实施顺序、拆分粒度与测试范围
 
 允许进入编码的前提：
 
-- `Plan` 已确认
-- `Spec` 已确认
 - `Tasks` 已确认
 - `spec/features/<feature-name>/plan.md`、`spec/features/<feature-name>/spec.md`、`spec/features/<feature-name>/tasks.md` 已实际生成
 - 用户已手动明确继续
@@ -615,7 +608,7 @@ bash ./skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh --apply
 - `spec/templates/HOTFIX_TEMPLATE.md` 用于 `L3`
 - `spec/questions/` 是问题分析与只读调研记录目录
 - `spec/features/` 是后续 feature 规格和 change 历史的根目录
-- `L0` 文档固定保存在 `spec/questions/`
+- `L0` 如需保留分析记录，可放在 `spec/questions/`
 - `L1` 文档固定保存在 `spec/features/<feature-name>/`
 - `L2` 历史固定保存在 `spec/features/<feature-name>/smallchange/`
 - `L3` 历史固定保存在 `spec/features/<feature-name>/hotfix/`
@@ -646,17 +639,17 @@ Final Level: L0
 Change Type: QUESTION
 Doc Mode: QUESTION_RECORD
 Workflow: Context -> Investigation -> Answer
-Human Gate: 仅当后续要进入实现时，在 Answer 后确认
+Human Gate: 无；如分析后已明确需要实现，可直接升级到 L1、L2 或 L3 并继续推进
 Reason: 当前请求的目标是分析与解释，不是直接进入实现，因此应先走 L0 问题分析流程。
 Scope Signals: 只读排查；需要比较多种可能原因；尚未要求修改实现
 Escalation Note: 如果排查后决定修改认证流程、接口行为或补丁实现，再升级为 L1、L2 或 L3
 ```
 
-文档落到哪里：
+如需保留分析记录，文档可落到：
 
 - `spec/questions/2026-03-09-why-login-fails.md`
 
-1. `L1`: 新增登录功能，先做 `Plan -> Spec -> Tasks`，每阶段等待确认，再进入编码。
+1. `L1`: 新增登录功能，先做 `Plan -> Spec -> Tasks`，在 `Tasks` 完成后统一确认一次，再进入编码。
 2. `L2`: 修复密码校验缺陷，先生成变更任务，确认后再编码。
 3. `L3`: 修复生产环境令牌故障，先提出最小补丁方案，确认后再编码。
 

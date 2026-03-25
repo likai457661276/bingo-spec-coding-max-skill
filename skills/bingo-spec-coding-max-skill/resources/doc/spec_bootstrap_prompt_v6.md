@@ -24,12 +24,13 @@ Rules:
 - external contract changes must be `L1 + FULL_SPEC`
 - no direct `L2` without an existing feature spec
 - `L3` is only for the smallest safe patch
-- all levels require concrete `.md` files before implementation-driving commands
+- `L1`, `L2`, and `L3` require concrete `.md` files before implementation-driving commands
+- `L0` does not require a question record first; if analysis makes implementation clearly necessary, escalate directly to `L1`, `L2`, or `L3`
 
 ## STEP 1 - Human Gates
 
-- `L0`: after `Answer` only if implementation should continue
-- `L1`: after `Plan`, `Spec`, and `Tasks`
+- `L0`: no extra approval; end after `Answer` or escalate and continue
+- `L1`: complete `Plan`, `Spec`, and `Tasks`, then confirm once after `Tasks`
 - `L2`: after `Tasks`
 - `L3`: after `Patch Proposal`
 
@@ -58,7 +59,7 @@ AGENTS.md
 
 ## STEP 4 - Path Contract
 
-- `L0`: `spec/questions/<date>-<topic>.md`
+- `L0`: optionally `spec/questions/<date>-<topic>.md`
 - `L1`: `spec/features/<feature-name>/plan.md`, `spec.md`, `tasks.md`
 - `L2`: `spec/features/<feature-name>/smallchange/<date>-<change-name>.md`
 - `L3`: `spec/features/<feature-name>/hotfix/<date>-<hotfix-name>.md`

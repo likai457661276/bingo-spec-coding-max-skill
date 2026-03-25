@@ -113,19 +113,19 @@ L3（Hotfix）: Patch Proposal -> Code
 3. L2 必须依附已有 feature spec；若无 spec，升级为 L1。
 4. L3 只能用于最小安全补丁；范围扩大即升级为 L2 或 L1。
 5. 用户或开发者显式指定等级只能上调，不能绕过强制规则。
-6. L0/L1/L2/L3 都必须先生成实体 `.md` 文档；任何代码实现或推进实现的命令都必须等待用户确认并手动明确继续。
+6. `L1` / `L2` / `L3` 都必须先生成实体 `.md` 文档并遵守对应的人类门禁；`L0` 不强制落 `QUESTION_RECORD`，分析后若已明确需要实现，可直接升级到 `L1` / `L2` / `L3` 继续推进。
 
 ## Human Gates
 
-L0 需要在以下阶段后获得确认：
+L0 无需额外确认：
 
-1. Answer（仅当后续要进入实现时）
+1. 完成 `Answer` 后可直接结束
+2. 若分析结论已明确需要实现，可直接升级到 `L1`、`L2` 或 `L3`
 
 L1 需要在以下阶段后获得确认：
 
-1. Plan
-2. Spec
-3. Tasks
+1. 完成 `Plan`、`Spec`、`Tasks`
+2. 在 `Tasks` 后统一确认一次
 
 L2 需要在以下阶段后获得确认：
 
@@ -137,7 +137,13 @@ L3 需要在以下阶段后获得确认：
 
 ## Safe Execution Rule
 
-未完成分级输出、未生成当前级别要求的实体 `.md` 文档，或用户尚未确认并手动明确继续之前，不得进入代码实现阶段，也不得执行会推进实现的命令。
+未完成分级输出前，不得进入代码实现阶段，也不得执行会推进实现的命令。若后续工作进入 `L1`、`L2` 或 `L3`，仍须满足对应级别的文档门禁与人类门禁；`L0` 分析本身不要求先落文档或等待额外确认。
+
+## Spec Entry Binding
+
+1. `AGENTS.md` 负责请求分级、文档门禁与执行边界。
+2. 完成分级输出后，必须先读取 `spec/INDEX.md`，再决定进入 `spec/questions/` 或 `spec/features/<feature-name>/`。
+3. `spec/INDEX.md` 是规格树唯一导航入口；不得跳过索引直接假设文档路径。
 """,
         "spec/INDEX.md": """# 规格索引
 
@@ -150,6 +156,13 @@ L3 需要在以下阶段后获得确认：
 ## Agent 入口
 
 Agent 应从本文件进入规格树，再根据请求类型定位到 `spec/questions/` 或 `spec/features/<feature-name>/`。
+
+## 与 AGENTS.md 的挂接
+
+1. `AGENTS.md` 负责请求分级、Doc Mode、人类门禁与执行边界。
+2. 本文件负责把 `AGENTS.md` 的分级结果映射到具体 spec 路径与文档集合。
+3. Agent 在完成分级输出后，必须回到本索引，并按 `Doc Mode` 进入对应文档目录。
+4. 未读取本索引前，不得开始撰写 `plan/spec/tasks/question/change/hotfix` 文档。
 
 ## Prompt 来源
 
@@ -176,7 +189,7 @@ Agent 应从本文件进入规格树，再根据请求类型定位到 `spec/ques
 
 ## 文档目录约定
 
-1. `L0` 问题记录保存在 `spec/questions/<date>-<topic>.md`
+1. 如需沉淀 `L0` 问题记录，保存在 `spec/questions/<date>-<topic>.md`
 2. `L1` 主文档保存在 `spec/features/<feature-name>/plan.md`、`spec/features/<feature-name>/spec.md`、`spec/features/<feature-name>/tasks.md`
 3. `L2` 变更记录保存在 `spec/features/<feature-name>/smallchange/<date>-<change-name>.md`
 4. `L3` 热修复记录保存在 `spec/features/<feature-name>/hotfix/<date>-<hotfix-name>.md`
@@ -239,7 +252,7 @@ Context -> Plan -> Spec -> Tasks -> Code
 - Workflow: `Context -> Investigation -> Answer`
 - Doc Mode: `QUESTION_RECORD`
 - 适用：问题澄清、代码阅读结论、原因分析、方案比较、只读调研、是否值得做需求的前置判断
-- 强制门禁：必须先在 `spec/questions/` 下生成实体 `<date>-<topic>.md` 记录分析结论；若后续转为实现，仍需等待用户确认并按 L1/L2/L3 重新分级
+- 执行要求：可选在 `spec/questions/` 下生成 `<date>-<topic>.md` 记录分析结论；若分析后已明确需要实现，可直接升级到 `L1/L2/L3` 并继续推进，无需等待额外确认
 
 ### L1 Feature Change
 
@@ -272,18 +285,18 @@ Context -> Plan -> Spec -> Tasks -> Code
 
 ## Human Gate Rules
 
-- `L0`: after `Answer` if implementation should continue
-- `L1`: after `Plan`, `Spec`, `Tasks`
+- `L0`: none; 完成 `Answer` 后可直接结束，或直接升级到 `L1`、`L2`、`L3`
+- `L1`: 完成 `Plan`、`Spec`、`Tasks` 后，仅在 `Tasks` 后确认一次
 - `L2`: after `Tasks`
 - `L3`: after `Patch Proposal`
 
 ## 文档先行规则
 
-- `L0`: 先落地 `spec/questions/<date>-<topic>.md`
+- `L0`: 可选落地 `spec/questions/<date>-<topic>.md`，但这不是继续实现的前置条件
 - `L1`: 先创建 `spec/features/<feature-name>/`，再落地 `plan.md`、`spec.md`、`tasks.md`
 - `L2`: 先确认相关 feature 目录存在，再落地 `spec/features/<feature-name>/smallchange/<date>-<change-name>.md`
 - `L3`: 先确认相关 feature 目录存在，再落地 `spec/features/<feature-name>/hotfix/<date>-<hotfix-name>.md`
-- 所有级别都必须在文档落地并获得用户确认后，由用户手动明确继续，才可进入代码实现或执行推进实现的命令
+- 仅 `L1` / `L2` / `L3` 需要在文档落地并获得用户确认后，由用户手动明确继续，才可进入代码实现或执行推进实现的命令
 
 ## Prompt 路由
 
@@ -303,8 +316,8 @@ Context -> Plan -> Spec -> Tasks -> Code
 ## L0 问题分析约束
 
 1. 仅适用于问题澄清、原因分析、代码阅读、只读调研、方案比较和需求前置判断。
-2. 文档沉淀使用 `QUESTION_RECORD`，写入 `spec/questions/<date>-<topic>.md`。
-3. 若分析过程中已经明确进入实现设计、接口调整或行为变更，必须升级到 `L1`、`L2` 或 `L3`。
+2. 如需保留分析记录，可使用 `QUESTION_RECORD` 写入 `spec/questions/<date>-<topic>.md`，但这不是实现前置条件。
+3. 若分析过程中已经明确进入实现设计、接口调整或行为变更，应直接升级到 `L1`、`L2` 或 `L3` 并继续推进。
 
 ## 外部契约变更
 
@@ -336,12 +349,12 @@ Context -> Plan -> Spec -> Tasks -> Code
 
 ## 文档执行门禁
 
-1. `L0` 必须先在 `spec/questions/` 下生成并保存实体 `<date>-<topic>.md`。
+1. `L0` 可按需在 `spec/questions/` 下生成并保存实体 `<date>-<topic>.md`，但不作为实现门禁。
 2. `L1` 必须先创建 `spec/features/<feature-name>/`，并在其中保存 `plan.md`、`spec.md`、`tasks.md`。
 3. `L2` 必须先在 `spec/features/<feature-name>/smallchange/` 下生成并保存实体 `<date>-<change-name>.md`。
 4. `L3` 必须先在 `spec/features/<feature-name>/hotfix/` 下生成并保存实体 `<date>-<hotfix-name>.md`。
-5. 上述文档未落地前，不得编码，也不得执行会推进实现的命令。
-6. 文档落地后，若后续要推进实现，仍必须等待用户确认，并由用户手动明确继续。
+5. `L1` / `L2` / `L3` 的文档未落地前，不得编码，也不得执行会推进实现的命令。
+6. `L1` / `L2` / `L3` 文档落地后，若后续要推进实现，仍必须等待用户确认，并由用户手动明确继续。
 """,
         "spec/templates/QUESTION_TEMPLATE.md": """# Question: <topic>
 
@@ -352,13 +365,18 @@ Final Level: L0
 Change Type: QUESTION
 Doc Mode: QUESTION_RECORD
 Workflow: Context -> Investigation -> Answer
-Human Gate: 先生成并保存 `spec/questions/<date>-<topic>.md`；若后续转实现，待用户确认并手动明确继续后再按 L1/L2/L3 重分级
+Human Gate: 无；如分析后已明确需要实现，可直接升级到 `L1`、`L2` 或 `L3` 并继续推进
 
 ## Preconditions
 
 - 当前目标是澄清问题、分析现状、比较方案或给出建议
 - 尚未请求直接修改实现或推进实现的命令
 - 若分析结论转为明确变更需求，升级为 `L1`、`L2` 或 `L3`
+
+## 可选记录
+
+- 本模板仅在需要沉淀分析记录时使用，不是进入实现的前置门禁
+- 如需保存，写入 `spec/questions/<date>-<topic>.md`
 
 ## 问题陈述
 
@@ -385,49 +403,6 @@ Human Gate: 先生成并保存 `spec/questions/<date>-<topic>.md`；若后续转
 ## Escalation Triggers
 
 - 哪些信号会让该问题升级为 L1 / L2 / L3：
-""",
-        "spec/templates/QUESTION_TEMPLATE.md": """# Question: <topic>
-
-## Classification
-
-Requested Level: AUTO | L0 | L1 | L2 | L3
-Final Level: L0
-Change Type: QUESTION
-Doc Mode: QUESTION_RECORD
-Workflow: Context -> Investigation -> Answer
-Human Gate: Save `spec/questions/<date>-<topic>.md` first; if implementation should follow, wait for user confirmation and then reclassify into `L1`, `L2`, or `L3`
-
-## Preconditions
-
-- The current goal is clarification, analysis, investigation, or recommendation
-- No direct implementation change has been requested yet
-- If the result becomes a concrete change request, escalate to `L1`, `L2`, or `L3`
-
-## Question
-
-Describe the question, uncertainty, or decision to make.
-
-## Known Context
-
-- Relevant modules:
-- Known facts:
-- Unknowns:
-
-## Investigation
-
-1. ...
-2. ...
-3. ...
-
-## Answer
-
-- Conclusion:
-- Evidence:
-- Recommended next step:
-
-## Escalation Triggers
-
-- Signals that should upgrade this record to L1 / L2 / L3:
 """,
         "spec/templates/PLAN_TEMPLATE.md": """# Plan: <feature-name>
 
@@ -659,19 +634,19 @@ L3 (Hotfix): Patch Proposal -> Code
 3. `L2` requires an existing feature spec; if none exists, escalate to `L1`.
 4. `L3` is only for the smallest safe patch; if scope expands, escalate to `L2` or `L1`.
 5. User- or developer-requested levels may raise conservatism, but may not bypass hard rules.
-6. `L0` / `L1` / `L2` / `L3` must all produce concrete `.md` documents first, and code or implementation-driving commands may continue only after user confirmation and a manual go-ahead.
+6. `L1` / `L2` / `L3` must produce concrete `.md` documents first and obey their human gates; `L0` does not require a `QUESTION_RECORD`, and analysis may escalate directly into `L1`, `L2`, or `L3` when implementation is clearly needed.
 
 ## Human Gates
 
-L0 requires approval after:
+L0 requires no extra approval:
 
-1. Answer (only if implementation should continue)
+1. `Answer` may end the work directly
+2. If implementation is clearly needed after analysis, escalate directly to `L1`, `L2`, or `L3`
 
 L1 requires approval after:
 
-1. Plan
-2. Spec
-3. Tasks
+1. `Plan`, `Spec`, and `Tasks` are all complete
+2. one confirmation after `Tasks`
 
 L2 requires approval after:
 
@@ -683,7 +658,13 @@ L3 requires approval after:
 
 ## Safe Execution Rule
 
-Do not implement code, or run implementation-driving commands, before classification is complete, the required concrete `.md` document exists, and the user has confirmed it and manually told the agent to continue.
+Do not implement code, or run implementation-driving commands, before classification is complete. If the work enters `L1`, `L2`, or `L3`, the required concrete `.md` documents and human gates still apply. `L0` analysis itself does not require a document or an extra human checkpoint first.
+
+## Spec Entry Binding
+
+1. `AGENTS.md` governs request classification, document gates, and execution boundaries.
+2. After classification output is complete, the agent must read `spec/INDEX.md` before choosing either `spec/questions/` or `spec/features/<feature-name>/`.
+3. `spec/INDEX.md` is the single navigation entry to the spec tree; do not skip it and assume a document path directly.
 """,
         "spec/INDEX.md": """# Spec Index
 
@@ -696,6 +677,13 @@ Do not implement code, or run implementation-driving commands, before classifica
 ## Agent Entry
 
 Agents should enter the spec tree from this file, then route either to `spec/questions/` or the relevant feature under `spec/features/<feature-name>/`.
+
+## Binding To AGENTS.md
+
+1. `AGENTS.md` defines request classification, Doc Mode, human gates, and execution boundaries.
+2. This file maps the classification result from `AGENTS.md` to the concrete spec path and required document set.
+3. After finishing classification output, the agent must return to this index and enter the correct document path based on `Doc Mode`.
+4. Do not start writing `plan/spec/tasks/question/change/hotfix` documents before reading this index.
 
 ## Prompt Sources
 
@@ -722,7 +710,7 @@ Agents should enter the spec tree from this file, then route either to `spec/que
 
 ## Document Layout
 
-1. `L0` question records live in `spec/questions/<date>-<topic>.md`
+1. Optional `L0` question records live in `spec/questions/<date>-<topic>.md`
 2. `L1` primary docs live in `spec/features/<feature-name>/plan.md`, `spec/features/<feature-name>/spec.md`, and `spec/features/<feature-name>/tasks.md`
 3. `L2` change records live in `spec/features/<feature-name>/smallchange/<date>-<change-name>.md`
 4. `L3` hotfix records live in `spec/features/<feature-name>/hotfix/<date>-<hotfix-name>.md`
@@ -785,7 +773,7 @@ Context -> Plan -> Spec -> Tasks -> Code
 - Workflow: `Context -> Investigation -> Answer`
 - Doc Mode: `QUESTION_RECORD`
 - Use for: clarification questions, code-reading conclusions, root-cause analysis, option comparison, read-only investigation, or deciding whether a future change is needed
-- Hard gate: generate a concrete record at `spec/questions/<date>-<topic>.md` first; if the request later turns into implementation, wait for user review and reclassify into `L1`, `L2`, or `L3`
+- Execution rule: optionally save a concrete record at `spec/questions/<date>-<topic>.md`; if analysis makes implementation clearly necessary, escalate directly to `L1`, `L2`, or `L3` and continue without an extra confirmation stop
 
 ### L1 Feature Change
 
@@ -818,18 +806,18 @@ Context -> Plan -> Spec -> Tasks -> Code
 
 ## Human Gate Rules
 
-- `L0`: approval after `Answer` if implementation should continue
-- `L1`: approval after `Plan`, `Spec`, and `Tasks`
+- `L0`: none; `Answer` may finish the work, or immediately escalate to `L1`, `L2`, or `L3`
+- `L1`: complete `Plan`, `Spec`, and `Tasks`, then approve once after `Tasks`
 - `L2`: approval after `Tasks`
 - `L3`: approval after `Patch Proposal`
 
 ## Document-First Rule
 
-- `L0`: save `spec/questions/<date>-<topic>.md` first
+- `L0`: optionally save `spec/questions/<date>-<topic>.md`, but this is not a prerequisite for implementation
 - `L1`: create `spec/features/<feature-name>/` first, then save `plan.md`, `spec.md`, and `tasks.md` there
 - `L2`: confirm the feature folder exists, then save `spec/features/<feature-name>/smallchange/<date>-<change-name>.md`
 - `L3`: confirm the feature folder exists, then save `spec/features/<feature-name>/hotfix/<date>-<hotfix-name>.md`
-- For every level, code work and implementation-driving commands must wait until the document exists, the user reviews it, and the user manually tells the agent to continue
+- For `L1`, `L2`, and `L3`, code work and implementation-driving commands must wait until the document exists, the user reviews it, and the user manually tells the agent to continue
 
 ## Prompt Routing
 
@@ -849,8 +837,8 @@ Context -> Plan -> Spec -> Tasks -> Code
 ## L0 Constraints
 
 1. Use `L0` only for clarification, analysis, code reading, option comparison, read-only investigation, or deciding whether a change is needed.
-2. Documentation uses `QUESTION_RECORD` under `spec/questions/<date>-<topic>.md`.
-3. If the investigation becomes concrete implementation design, behavior change, or contract change, escalate to `L1`, `L2`, or `L3`.
+2. When a durable analysis record is useful, use `QUESTION_RECORD` under `spec/questions/<date>-<topic>.md`, but it is optional.
+3. If the investigation becomes concrete implementation design, behavior change, or contract change, escalate to `L1`, `L2`, or `L3` and continue.
 
 ## External Contract Changes
 
@@ -882,12 +870,60 @@ Any of the following must be classified as `L1 + FULL_SPEC`:
 
 ## Document Execution Gate
 
-1. `L0` must first generate and save a concrete `<date>-<topic>.md` under `spec/questions/`.
+1. `L0` may optionally generate and save a concrete `<date>-<topic>.md` under `spec/questions/`, but this is not an implementation gate.
 2. `L1` must first create `spec/features/<feature-name>/`, then save `plan.md`, `spec.md`, and `tasks.md` inside it.
 3. `L2` must first generate and save a concrete `<date>-<change-name>.md` under `spec/features/<feature-name>/smallchange/`.
 4. `L3` must first generate and save a concrete `<date>-<hotfix-name>.md` under `spec/features/<feature-name>/hotfix/`.
-5. Before those documents exist, do not code and do not run implementation-driving commands.
-6. After the documents exist, still wait for user confirmation and a manual go-ahead if the work will continue into implementation.
+5. Before `L1`, `L2`, or `L3` documents exist, do not code and do not run implementation-driving commands.
+6. After `L1`, `L2`, or `L3` documents exist, still wait for user confirmation and a manual go-ahead if the work will continue into implementation.
+""",
+        "spec/templates/QUESTION_TEMPLATE.md": """# Question: <topic>
+
+## Classification
+
+Requested Level: AUTO | L0 | L1 | L2 | L3
+Final Level: L0
+Change Type: QUESTION
+Doc Mode: QUESTION_RECORD
+Workflow: Context -> Investigation -> Answer
+Human Gate: None; if implementation is clearly needed after analysis, escalate directly to `L1`, `L2`, or `L3` and continue
+
+## Preconditions
+
+- The current goal is clarification, analysis, investigation, or recommendation
+- No direct implementation change has been requested yet
+- If the result becomes a concrete change request, escalate to `L1`, `L2`, or `L3`
+
+## Optional Record
+
+- Use this template only when a durable analysis record is worth keeping; it is not a prerequisite for implementation
+- If saved, write it to `spec/questions/<date>-<topic>.md`
+
+## Question
+
+Describe the question, uncertainty, or decision to make.
+
+## Known Context
+
+- Relevant modules:
+- Known facts:
+- Unknowns:
+
+## Investigation
+
+1. ...
+2. ...
+3. ...
+
+## Answer
+
+- Conclusion:
+- Evidence:
+- Recommended next step:
+
+## Escalation Triggers
+
+- Signals that should upgrade this record to L1 / L2 / L3:
 """,
         "spec/templates/PLAN_TEMPLATE.md": """# Plan: <feature-name>
 

@@ -8,10 +8,10 @@ Final Level: L0
 Change Type: QUESTION
 Doc Mode: QUESTION_RECORD
 Workflow: Context -> Investigation -> Answer
-Human Gate: Confirm after Answer only if implementation should continue
+Human Gate: None; if implementation is clearly needed after analysis, escalate to L1, L2, or L3 and continue
 Reason: The user is asking for diagnosis and explanation first, not an implementation change.
 Scope Signals: Read-only investigation; compare possibilities; no direct code change requested
-Escalation Note: Reclassify to L1, L2, or L3 if the request turns into implementation work
+Escalation Note: Reclassify to L1, L2, or L3 and continue if the request turns into implementation work
 ```
 
 ## Example 1 - Add Login Feature
@@ -22,7 +22,7 @@ Final Level: L1
 Change Type: FEATURE
 Doc Mode: FULL_SPEC
 Workflow: Context -> Plan -> Spec -> Tasks -> Code
-Human Gate: Confirm after Plan, Spec, and Tasks
+Human Gate: Complete Plan, Spec, and Tasks, then confirm once after Tasks
 Reason: New capability plus a new external interface requires full feature workflow.
 Scope Signals: New login page; New authentication API; New JWT issuance flow
 Escalation Note: None
