@@ -48,6 +48,32 @@ If you only want the shortest path to a working setup:
 3. explicitly trigger `$bingo-spec-coding-max-skill`
 4. review the `dry-run` preview, then confirm `apply`
 
+Install it into Codex first:
+
+macOS / Linux:
+
+```bash
+bash ./skills/bingo-spec-coding-max-skill/scripts/install_codex_skill.sh
+```
+
+Windows:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\scripts\install_codex_skill.ps1
+```
+
+Then trigger it inside the target project:
+
+1. open the target project root in Codex
+2. make sure the current working directory is the target project, not the skill repository
+3. enter the following prompt to trigger the skill:
+
+```text
+Please run $bingo-spec-coding-max-skill for the current project. Start with dry-run, then apply after confirmation.
+```
+
+After the trigger, the skill refreshes the current project's `doc/` first and then enters the initialization flow inside that project.
+
 The two most common command paths are:
 
 - first initialization: `--dry-run` -> `--apply`
@@ -225,6 +251,8 @@ Benefits:
 - the same skill can be reused across multiple projects
 
 ### Install into Codex
+
+If you only need the fastest path, follow [Quick Start](#quick-start) above; this section keeps the fuller installation, upgrade, and manual-install details.
 
 The recommended path is now simple:
 

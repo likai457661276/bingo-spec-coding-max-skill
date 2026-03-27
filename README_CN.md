@@ -48,6 +48,32 @@
 3. 在目标项目里显式输入 `$bingo-spec-coding-max-skill`
 4. 先看 `dry-run` 预览，确认后再 `apply`
 
+先安装到 Codex：
+
+macOS / Linux:
+
+```bash
+bash ./skills/bingo-spec-coding-max-skill/scripts/install_codex_skill.sh
+```
+
+Windows:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\skills\bingo-spec-coding-max-skill\scripts\install_codex_skill.ps1
+```
+
+然后在目标项目里触发：
+
+1. 用 Codex 打开目标项目根目录
+2. 确认当前工作目录是目标项目，而不是技能仓库
+3. 输入下面这句触发技能：
+
+```text
+请执行 $bingo-spec-coding-max-skill，对当前项目先 dry-run，确认后再 apply。
+```
+
+触发后，skill 会先自动刷新当前项目的 `doc/`，然后在当前项目内进入初始化流程。
+
 最常见的两条命令：
 
 - 首次初始化：`--dry-run` -> `--apply`
@@ -214,6 +240,8 @@ Escalation Note:
 - 同一个技能可以复用到多个项目
 
 ### 安装到 Codex
+
+如果你只想走最快路径，直接按前面的 [快速上手](#快速上手) 执行；这里补充详细安装方式、升级方式和手动安装方式。
 
 推荐的主路径现在很简单：
 
