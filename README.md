@@ -589,6 +589,7 @@ Running `--apply` creates or writes:
 - Testing And Validation Constraints
 - UI And Interface Constraints
 - Engineering Constraints
+- Project Rules And Collaboration Constraints
 - Domain Constraints
 - Non-functional Constraints
 - Assumptions And Unknowns
@@ -596,6 +597,7 @@ Running `--apply` creates or writes:
 Generation rules:
 
 - high-confidence signals are written directly into the draft, such as build tools, test commands, common source roots, and framework dependencies
+- repository-rule signals from CI, lint/format, workspaces, hooks, and version-pinning files are folded into the `Project Rules And Collaboration Constraints` draft
 - low-confidence signals use conservative wording such as "detected", "potential", "suggested", or "confirmation needed"
 - weak-signal repositories fall back gracefully to a minimal context template instead of inventing architecture conclusions
 

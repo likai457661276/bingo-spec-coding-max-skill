@@ -14,7 +14,7 @@ description: 初始化专用技能。仅在用户显式输入 `$bingo-spec-codin
 3. 检测到 `.spec-bootstrap.lock` 时停止并提示使用 `--reinit` 或 `--upgrade`。
 4. 已存在文件默认不覆盖，除非传 `--force`。
 5. 对已初始化项目做规范重建时，优先使用 `--upgrade`，它等价于 `--reinit --force`。
-6. 初始化时会自动生成仓库级 `SPEC_CONTEXT` 初稿，支持 Java / Frontend / Python / 混合仓库；不确定信息保留为“待确认”。
+6. 初始化时会自动生成仓库级 `SPEC_CONTEXT` 初稿，支持 Java / Frontend / Python / 混合仓库；除基础技术栈外，还会尝试从 CI、lint/format、workspace、hooks 等工程文件提取“项目规则与协作约束”；不确定信息保留为“待确认”。
 7. 注入的分级规则采用三轴输出：`Requested Level / Final Level / Change Type / Doc Mode`，并新增 `L0` 问题分析通道，同时内置外部契约强制 `L1`、无既有 spec 禁止直接 `L2`、`L3` 仅限最小安全补丁等规则。
 8. 在目标项目内手动触发 skill 时，先自动执行 Python 同步脚本刷新当前项目的 `doc/`；若当前项目已有 `doc/`，先清空后重拷贝，再进入 `dry-run` 初始化。
 

@@ -53,6 +53,42 @@ CYPRESS_CONFIGS = (
     "cypress.config.mjs",
     "cypress.config.ts",
 )
+ESLINT_CONFIGS = (
+    ".eslintrc",
+    ".eslintrc.js",
+    ".eslintrc.cjs",
+    ".eslintrc.json",
+    ".eslintrc.yaml",
+    ".eslintrc.yml",
+    "eslint.config.js",
+    "eslint.config.cjs",
+    "eslint.config.mjs",
+    "eslint.config.ts",
+)
+PRETTIER_CONFIGS = (
+    ".prettierrc",
+    ".prettierrc.js",
+    ".prettierrc.cjs",
+    ".prettierrc.json",
+    ".prettierrc.yaml",
+    ".prettierrc.yml",
+    "prettier.config.js",
+    "prettier.config.cjs",
+    "prettier.config.mjs",
+    "prettier.config.ts",
+)
+STYLELINT_CONFIGS = (
+    ".stylelintrc",
+    ".stylelintrc.js",
+    ".stylelintrc.cjs",
+    ".stylelintrc.json",
+    ".stylelintrc.yaml",
+    ".stylelintrc.yml",
+    "stylelint.config.js",
+    "stylelint.config.cjs",
+    "stylelint.config.mjs",
+)
+TASKFILE_CONFIGS = ("Taskfile.yml", "Taskfile.yaml")
 
 
 DOC_TO_TARGET = {
@@ -217,6 +253,12 @@ Agent 应从本文件进入规格树，再根据请求类型定位到 `spec/ques
 
 - 业务约束：
 - 合规/安全约束：
+
+## 项目规则与协作约束
+
+- CI / 自动化流程：
+- 代码质量 / 格式化规则：
+- 本地提交门禁：
 
 ## 非功能约束
 
@@ -739,6 +781,12 @@ Agents should enter the spec tree from this file, then route either to `spec/que
 - Business constraints:
 - Compliance/security constraints:
 
+## Project Rules And Collaboration Constraints
+
+- CI and automation flows:
+- Code-quality and formatting rules:
+- Local commit gates:
+
 ## Non-functional Constraints
 
 - Performance:
@@ -1234,6 +1282,20 @@ def find_manifest_paths(project_root: Path, *names: str) -> list[Path]:
     return found
 
 
+def detect_existing_paths(project_root: Path, *names: str) -> list[str]:
+    return dedupe([relative_display(project_root, path) for path in find_manifest_paths(project_root, *names)])
+
+
+def parse_pyproject_data(path: Path) -> dict[str, Any]:
+    if tomllib is None:
+        return {}
+
+    try:
+        return tomllib.loads(safe_read_text(path))
+    except tomllib.TOMLDecodeError:
+        return {}
+
+
 def detect_project_summary(project_root: Path) -> str:
     readme = project_root / "README.md"
     if readme.exists():
@@ -1241,6 +1303,22 @@ def detect_project_summary(project_root: Path) -> str:
             stripped = line.strip()
             if stripped and not stripped.startswith("#"):
                 return stripped
+    package_json = project_root / "package.json"
+    if package_json.exists():
+        package_name = str(parse_package_json(package_json).get("name", "")).strip()
+        if package_name:
+            return package_name
+    pyproject = project_root / "pyproject.toml"
+    if pyproject.exists():
+        pyproject_data = parse_pyproject_data(pyproject)
+        project_name = str(pyproject_data.get("project", {}).get("name", "")).strip()
+        if project_name:
+            return project_name
+        poetry_name = str(pyproject_data.get("tool", {}).get("poetry", {}).get("name", "")).strip()
+        if poetry_name:
+            return poetry_name
+    if project_root.name:
+        return project_root.name
     return DEFAULT_PROJECT_SUMMARY
 
 
@@ -1278,14 +1356,7 @@ def parse_package_json(path: Path) -> dict[str, Any]:
 
 
 def parse_pyproject_dependencies(path: Path) -> set[str]:
-    if tomllib is None:
-        return set()
-
-    try:
-        data = tomllib.loads(safe_read_text(path))
-    except tomllib.TOMLDecodeError:
-        return set()
-
+    data = parse_pyproject_data(path)
     deps: set[str] = set()
     project_deps = data.get("project", {}).get("dependencies", [])
     for item in project_deps:
@@ -1336,6 +1407,7 @@ def detect_java_signals(project_root: Path) -> dict[str, Any]:
     package_roots: list[str] = []
     profiles: list[str] = []
     data_signals: list[str] = []
+    quality_tools: list[str] = []
     run_commands: list[str] = []
     test_commands: list[str] = []
 
@@ -1370,6 +1442,14 @@ def detect_java_signals(project_root: Path) -> dict[str, Any]:
             frameworks.append("Thymeleaf")
         if "testcontainers" in manifest_text:
             frameworks.append("Testcontainers")
+        if "spotless" in manifest_text:
+            quality_tools.append("Spotless")
+        if "checkstyle" in manifest_text:
+            quality_tools.append("Checkstyle")
+        if "<pmd" in manifest_text or "pmd" in manifest_text:
+            quality_tools.append("PMD")
+        if "jacoco" in manifest_text:
+            quality_tools.append("JaCoCo")
 
         java_root = manifest_dir / "src/main/java"
         if java_root.exists():
@@ -1410,6 +1490,7 @@ def detect_java_signals(project_root: Path) -> dict[str, Any]:
         "package_roots": dedupe(package_roots),
         "profiles": dedupe(profiles),
         "data_signals": dedupe(data_signals),
+        "quality_tools": dedupe(quality_tools),
         "run_commands": dedupe(run_commands),
         "test_commands": dedupe(test_commands),
     }
@@ -1424,6 +1505,10 @@ def detect_frontend_signals(project_root: Path) -> dict[str, Any]:
     build_tools: list[str] = []
     ui_dirs: list[str] = []
     test_tools: list[str] = []
+    quality_tools: list[str] = []
+    quality_commands: list[str] = []
+    package_managers: list[str] = []
+    workspace_signals: list[str] = []
     run_commands: list[str] = []
     test_commands: list[str] = []
 
@@ -1441,6 +1526,7 @@ def detect_frontend_signals(project_root: Path) -> dict[str, Any]:
             package_manager = "pnpm"
         elif (manifest_dir / "yarn.lock").exists():
             package_manager = "yarn"
+        package_managers.append(package_manager)
 
         if "react" in dependency_names:
             frameworks.append("React")
@@ -1458,6 +1544,12 @@ def detect_frontend_signals(project_root: Path) -> dict[str, Any]:
             frameworks.append("TypeScript")
         if "tailwindcss" in dependency_names or (manifest_dir / "tailwind.config.js").exists() or (manifest_dir / "tailwind.config.ts").exists():
             frameworks.append("Tailwind CSS")
+        if "eslint" in dependency_names or any((manifest_dir / name).exists() for name in ESLINT_CONFIGS):
+            quality_tools.append("ESLint")
+        if "prettier" in dependency_names or any((manifest_dir / name).exists() for name in PRETTIER_CONFIGS):
+            quality_tools.append("Prettier")
+        if "stylelint" in dependency_names or any((manifest_dir / name).exists() for name in STYLELINT_CONFIGS):
+            quality_tools.append("Stylelint")
         if "vitest" in dependency_names:
             test_tools.append("Vitest")
         if "jest" in dependency_names:
@@ -1480,6 +1572,18 @@ def detect_frontend_signals(project_root: Path) -> dict[str, Any]:
                 test_commands.append(format_command_for_subdir(f"{package_manager} test", relative_dir))
         if "test:e2e" in scripts:
             test_commands.append(format_command_for_subdir(f"{package_manager} run test:e2e", relative_dir))
+        for script_name in ("lint", "typecheck", "build"):
+            if script_name in scripts:
+                quality_commands.append(format_command_for_subdir(f"{package_manager} run {script_name}", relative_dir))
+
+        if "workspaces" in package_data:
+            workspace_signals.append("npm workspaces")
+        if (manifest_dir / "pnpm-workspace.yaml").exists():
+            workspace_signals.append("pnpm workspace")
+        if (manifest_dir / "turbo.json").exists():
+            workspace_signals.append("Turborepo")
+        if (manifest_dir / "nx.json").exists():
+            workspace_signals.append("Nx")
 
         for dirname in ("src/pages", "pages", "src/components", "components", "public", "app"):
             candidate = manifest_dir / dirname
@@ -1493,6 +1597,10 @@ def detect_frontend_signals(project_root: Path) -> dict[str, Any]:
         "build_tools": dedupe(build_tools),
         "ui_dirs": dedupe(ui_dirs),
         "test_tools": dedupe(test_tools),
+        "quality_tools": dedupe(quality_tools),
+        "quality_commands": dedupe(quality_commands),
+        "package_managers": dedupe(package_managers),
+        "workspace_signals": dedupe(workspace_signals),
         "run_commands": dedupe(run_commands),
         "test_commands": dedupe(test_commands),
     }
@@ -1507,6 +1615,7 @@ def detect_python_signals(project_root: Path) -> dict[str, Any]:
     app_roots: list[str] = []
     test_roots: list[str] = []
     migration_signals: list[str] = []
+    quality_tools: list[str] = []
     run_commands: list[str] = []
     test_commands: list[str] = []
     dependency_names: set[str] = set()
@@ -1552,6 +1661,14 @@ def detect_python_signals(project_root: Path) -> dict[str, Any]:
         frameworks.append("Pydantic")
     if "pytest" in dependency_names:
         frameworks.append("pytest")
+    if "ruff" in dependency_names:
+        quality_tools.append("Ruff")
+    if "black" in dependency_names:
+        quality_tools.append("Black")
+    if "mypy" in dependency_names:
+        quality_tools.append("mypy")
+    if "tox" in dependency_names:
+        quality_tools.append("tox")
 
     root_tests = dedupe(test_roots)
     if root_tests:
@@ -1569,8 +1686,82 @@ def detect_python_signals(project_root: Path) -> dict[str, Any]:
         "app_roots": dedupe(app_roots),
         "test_roots": root_tests,
         "migration_signals": dedupe(migration_signals),
+        "quality_tools": dedupe(quality_tools),
         "run_commands": dedupe(run_commands),
         "test_commands": dedupe(test_commands),
+    }
+
+
+def detect_project_rule_signals(
+    project_root: Path,
+    java_signals: dict[str, Any],
+    frontend_signals: dict[str, Any],
+    python_signals: dict[str, Any],
+) -> dict[str, list[str]]:
+    ci_tools: list[str] = []
+    automation_tools: list[str] = []
+    quality_tools: list[str] = []
+    hook_tools: list[str] = []
+    workspace_tools: list[str] = []
+    package_managers: list[str] = []
+    quality_commands: list[str] = []
+    version_files: list[str] = []
+
+    github_workflows = project_root / ".github/workflows"
+    if github_workflows.is_dir() and any(github_workflows.glob("*.y*ml")):
+        ci_tools.append("GitHub Actions")
+    if (project_root / ".gitlab-ci.yml").exists():
+        ci_tools.append("GitLab CI")
+
+    if (project_root / "Makefile").exists():
+        automation_tools.append("Makefile")
+    if (project_root / "justfile").exists():
+        automation_tools.append("Justfile")
+    if any((project_root / name).exists() for name in TASKFILE_CONFIGS):
+        automation_tools.append("Taskfile")
+
+    if (project_root / ".editorconfig").exists():
+        quality_tools.append("EditorConfig")
+    if detect_existing_paths(project_root, *ESLINT_CONFIGS):
+        quality_tools.append("ESLint")
+    if detect_existing_paths(project_root, *PRETTIER_CONFIGS):
+        quality_tools.append("Prettier")
+    if detect_existing_paths(project_root, *STYLELINT_CONFIGS):
+        quality_tools.append("Stylelint")
+
+    if (project_root / ".husky").is_dir():
+        hook_tools.append("Husky")
+    if (project_root / ".pre-commit-config.yaml").exists():
+        hook_tools.append("pre-commit")
+
+    if (project_root / ".nvmrc").exists() or (project_root / ".node-version").exists():
+        version_files.append("Node version pinning")
+    if (project_root / ".python-version").exists():
+        version_files.append("Python version pinning")
+
+    if (project_root / "pnpm-workspace.yaml").exists():
+        workspace_tools.append("pnpm workspace")
+    if (project_root / "turbo.json").exists():
+        workspace_tools.append("Turborepo")
+    if (project_root / "nx.json").exists():
+        workspace_tools.append("Nx")
+
+    quality_tools.extend(java_signals.get("quality_tools", []))
+    quality_tools.extend(frontend_signals.get("quality_tools", []))
+    quality_tools.extend(python_signals.get("quality_tools", []))
+    workspace_tools.extend(frontend_signals.get("workspace_signals", []))
+    package_managers.extend(frontend_signals.get("package_managers", []))
+    quality_commands.extend(frontend_signals.get("quality_commands", []))
+
+    return {
+        "ci_tools": dedupe(ci_tools),
+        "automation_tools": dedupe(automation_tools),
+        "quality_tools": dedupe(quality_tools),
+        "hook_tools": dedupe(hook_tools),
+        "workspace_tools": dedupe(workspace_tools),
+        "package_managers": dedupe(package_managers),
+        "quality_commands": dedupe(quality_commands),
+        "version_files": dedupe(version_files),
     }
 
 
@@ -1600,6 +1791,7 @@ def detect_repo_signals(project_root: Path) -> dict[str, Any]:
         stack_markers.append(python_summary)
 
     container_signals = [name for name in ("docker-compose.yml", "docker-compose.yaml", "Dockerfile") if (project_root / name).exists()]
+    project_rules = detect_project_rule_signals(project_root, java_signals, frontend_signals, python_signals)
     return {
         "project_summary": detect_project_summary(project_root),
         "common_roots": detect_common_roots(project_root),
@@ -1608,6 +1800,7 @@ def detect_repo_signals(project_root: Path) -> dict[str, Any]:
         "python": python_signals,
         "stack_markers": dedupe(stack_markers),
         "container_signals": container_signals,
+        "project_rules": project_rules,
     }
 
 
@@ -1707,6 +1900,7 @@ def build_context_model(project_root: Path, signals: dict[str, Any], language: s
     java_signals = signals.get("java", {})
     frontend_signals = signals.get("frontend", {})
     python_signals = signals.get("python", {})
+    project_rules = signals.get("project_rules", {})
 
     runtime_constraints: list[str] = []
     if java_signals.get("profiles"):
@@ -1783,6 +1977,37 @@ def build_context_model(project_root: Path, signals: dict[str, Any], language: s
         else:
             engineering_constraints.append("Confirmation needed: engineering constraints are still sparse; confirm build chain, deployment flow, and directory boundaries.")
 
+    project_rule_constraints: list[str] = []
+    if project_rules.get("ci_tools"):
+        label = "检测到 CI / 自动化流程" if language == "zh" else "Detected CI and automation flows"
+        project_rule_constraints.append(f"{label}：{', '.join(project_rules['ci_tools'])}")
+    if project_rules.get("automation_tools"):
+        label = "检测到统一任务入口" if language == "zh" else "Detected shared task entrypoints"
+        project_rule_constraints.append(f"{label}：{', '.join(project_rules['automation_tools'])}")
+    if project_rules.get("workspace_tools"):
+        label = "检测到工作区或仓库编排约束" if language == "zh" else "Detected workspace or repository orchestration constraints"
+        project_rule_constraints.append(f"{label}：{', '.join(project_rules['workspace_tools'])}")
+    if project_rules.get("package_managers"):
+        label = "检测到包管理器 / 工具链约束" if language == "zh" else "Detected package-manager or toolchain constraints"
+        project_rule_constraints.append(f"{label}：{', '.join(project_rules['package_managers'])}")
+    if project_rules.get("quality_tools"):
+        label = "检测到代码质量 / 格式化规则" if language == "zh" else "Detected code-quality and formatting rules"
+        project_rule_constraints.append(f"{label}：{', '.join(project_rules['quality_tools'])}")
+    if project_rules.get("hook_tools"):
+        label = "检测到本地提交门禁" if language == "zh" else "Detected local commit gates"
+        project_rule_constraints.append(f"{label}：{', '.join(project_rules['hook_tools'])}")
+    if project_rules.get("version_files"):
+        label = "检测到运行时版本约束" if language == "zh" else "Detected runtime version pinning"
+        project_rule_constraints.append(f"{label}：{', '.join(project_rules['version_files'])}")
+    if project_rules.get("quality_commands"):
+        label = "建议将以下命令视为提交前检查" if language == "zh" else "Treat these commands as likely pre-commit or CI checks"
+        project_rule_constraints.append(f"{label}：{'; '.join(project_rules['quality_commands'])}")
+    if not project_rule_constraints:
+        if language == "zh":
+            project_rule_constraints.append("待确认：尚未检测到稳定的项目规则来源，建议补充 CI、lint/format、hooks 与统一脚本约定。")
+        else:
+            project_rule_constraints.append("Confirmation needed: no stable repository-rule source was detected yet; review CI, lint/format, hooks, and shared task scripts.")
+
     if language == "zh":
         domain_constraints = [
             "业务约束：待确认，建议结合 README、现有接口与数据库模型补充。",
@@ -1825,6 +2050,7 @@ def build_context_model(project_root: Path, signals: dict[str, Any], language: s
         "testing_constraints": testing_constraints,
         "ui_api_constraints": ui_api_constraints,
         "engineering_constraints": engineering_constraints,
+        "project_rule_constraints": project_rule_constraints,
         "domain_constraints": domain_constraints,
         "non_functional_constraints": non_functional_constraints,
         "assumptions": assumptions,
@@ -1886,6 +2112,7 @@ def render_spec_context(context: dict[str, Any], language: str) -> str:
             render_section("测试与验证约束", context["testing_constraints"]),
             render_section("UI 与接口约束", context["ui_api_constraints"]),
             render_section("工程约束", context["engineering_constraints"]),
+            render_section("项目规则与协作约束", context["project_rule_constraints"]),
             render_section("领域约束", context["domain_constraints"]),
             render_section("非功能约束", context["non_functional_constraints"]),
             render_section("假设与未知项", context["assumptions"]),
@@ -1908,6 +2135,7 @@ def render_spec_context(context: dict[str, Any], language: str) -> str:
             render_section("Testing And Validation Constraints", context["testing_constraints"]),
             render_section("UI And Interface Constraints", context["ui_api_constraints"]),
             render_section("Engineering Constraints", context["engineering_constraints"]),
+            render_section("Project Rules And Collaboration Constraints", context["project_rule_constraints"]),
             render_section("Domain Constraints", context["domain_constraints"]),
             render_section("Non-functional Constraints", context["non_functional_constraints"]),
             render_section("Assumptions And Unknowns", context["assumptions"]),
@@ -1930,57 +2158,6 @@ def render_generated_file(
     for placeholder, value in replacements.items():
         rendered = rendered.replace(placeholder, value)
     return rendered
-
-
-def detect_project_summary(project_root: Path) -> str:
-    readme = project_root / "README.md"
-    if readme.exists():
-        for line in readme.read_text(encoding="utf-8").splitlines():
-            stripped = line.strip()
-            if stripped and not stripped.startswith("#"):
-                return stripped
-    return DEFAULT_PROJECT_SUMMARY
-
-
-def detect_stack(project_root: Path) -> str:
-    markers = []
-    if (project_root / "package.json").exists():
-        markers.append("Node.js")
-    if (project_root / "pyproject.toml").exists() or (project_root / "requirements.txt").exists():
-        markers.append("Python")
-    if (project_root / "go.mod").exists():
-        markers.append("Go")
-    if (project_root / "Cargo.toml").exists():
-        markers.append("Rust")
-    if (project_root / "pom.xml").exists() or (project_root / "build.gradle").exists():
-        markers.append("Java")
-    if not markers:
-        return DEFAULT_STACK
-    return ", ".join(markers)
-
-
-def detect_test_command(project_root: Path) -> str:
-    if (project_root / "package.json").exists():
-        return "npm test"
-    if (project_root / "pyproject.toml").exists() or (project_root / "requirements.txt").exists():
-        return "pytest"
-    if (project_root / "go.mod").exists():
-        return "go test ./..."
-    if (project_root / "Cargo.toml").exists():
-        return "cargo test"
-    if (project_root / "pom.xml").exists():
-        return "mvn test"
-    if (project_root / "build.gradle").exists():
-        return "./gradlew test"
-    return DEFAULT_TEST_COMMAND
-
-
-def detect_source_roots(project_root: Path) -> str:
-    candidates = ["src", "app", "lib", "backend", "frontend", "packages", "services"]
-    found = [name for name in candidates if (project_root / name).exists()]
-    if not found:
-        return DEFAULT_SOURCE_ROOTS
-    return ", ".join(found)
 
 
 def print_plan(

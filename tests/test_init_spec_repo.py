@@ -188,6 +188,45 @@ dependencies = [
         (root / "tests").mkdir(parents=True, exist_ok=True)
         (root / "tests/test_app.py").write_text("def test_app():\n    assert True\n", encoding="utf-8")
 
+    def create_repo_rule_signals(self, root: Path) -> None:
+        self.create_frontend_project(root)
+        (root / "package.json").write_text(
+            """
+{
+  "name": "rule-heavy-frontend",
+  "scripts": {
+    "dev": "vite",
+    "test": "vitest run",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "react": "^18.0.0",
+    "vite": "^5.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.0.0"
+  }
+}
+""".strip()
+            + "\n",
+            encoding="utf-8",
+        )
+        (root / "pnpm-lock.yaml").write_text("lockfileVersion: '9.0'\n", encoding="utf-8")
+        (root / "pnpm-workspace.yaml").write_text("packages:\n  - .\n", encoding="utf-8")
+        (root / "turbo.json").write_text('{"pipeline":{}}\n', encoding="utf-8")
+        (root / ".eslintrc.json").write_text("{}\n", encoding="utf-8")
+        (root / ".prettierrc").write_text("{}\n", encoding="utf-8")
+        (root / ".editorconfig").write_text("root = true\n", encoding="utf-8")
+        (root / ".husky").mkdir(parents=True, exist_ok=True)
+        (root / ".husky" / "pre-commit").write_text("pnpm lint\n", encoding="utf-8")
+        (root / ".github/workflows").mkdir(parents=True, exist_ok=True)
+        (root / ".github/workflows/ci.yml").write_text("name: ci\n", encoding="utf-8")
+
     def test_dry_run_does_not_write_files(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             project_root = Path(tmpdir)
@@ -512,6 +551,28 @@ dependencies = [
             self.assertIn("Playwright", context_content)
             self.assertIn("src/pages", context_content)
             self.assertIn("npm run dev", context_content)
+
+    def test_repo_rule_signals_are_written_to_spec_context(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            project_root = Path(tmpdir)
+            self.create_source_docs(project_root)
+            self.create_repo_rule_signals(project_root)
+
+            result = self.run_script(project_root, "--apply")
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            context_content = (project_root / "spec/SPEC_CONTEXT.md").read_text(encoding="utf-8")
+
+            self.assertIn("## 项目规则与协作约束", context_content)
+            self.assertIn("GitHub Actions", context_content)
+            self.assertIn("pnpm workspace", context_content)
+            self.assertIn("Turborepo", context_content)
+            self.assertIn("ESLint", context_content)
+            self.assertIn("Prettier", context_content)
+            self.assertIn("EditorConfig", context_content)
+            self.assertIn("Husky", context_content)
+            self.assertIn("pnpm run lint", context_content)
+            self.assertIn("pnpm run typecheck", context_content)
 
     def test_python_repo_generates_enhanced_spec_context(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

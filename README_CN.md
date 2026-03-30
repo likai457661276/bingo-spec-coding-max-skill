@@ -578,6 +578,7 @@ bash ./skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh --apply
 - 测试与验证约束
 - UI 与接口约束
 - 工程约束
+- 项目规则与协作约束
 - 领域约束
 - 非功能约束
 - 假设与未知项
@@ -585,6 +586,7 @@ bash ./skills/bingo-spec-coding-max-skill/scripts/init_spec_repo.sh --apply
 自动生成规则：
 
 - 高置信度信息直接写入初稿，例如构建工具、测试命令、常见源码目录、框架依赖
+- 会额外综合 CI、lint/format、workspace、hooks、版本锁定文件等工程信号，生成“项目规则与协作约束”草稿
 - 低置信度信息使用“检测到”“推测”“建议关注”“待确认”等保守措辞
 - 弱特征仓库会优雅回退到最小上下文模板，不会强行编造架构结论
 
